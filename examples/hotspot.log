@@ -1,0 +1,907 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<hotspot_log version='160 1' process='14550' time_ms='1379689423288'>
+<vm_version>
+<name>
+OpenJDK 64-Bit Server VM
+</name>
+<release>
+25.0-b51-internal-debug
+</release>
+<info>
+OpenJDK 64-Bit Server VM (25.0-b51-internal-debug) for linux-amd64 JRE (1.8.0), built on Sep 20 2013 12:33:32 by &quot;simonis&quot; with gcc 4.4.3
+</info>
+</vm_version>
+<vm_arguments>
+<args>
+-XX:+PrintOptoAssembly -XX:+PrintCompilation -XX:-TieredCompilation -XX:-UseOnStackReplacement -XX:CICompilerCount=1 -XX:LoopUnrollLimit=0 
+</args>
+<command>
+IntLoop 10000
+</command>
+<launcher>
+SUN_STANDARD
+</launcher>
+<properties>
+java.vm.specification.name=Java Virtual Machine Specification
+java.vm.version=25.0-b51-internal-debug
+java.vm.name=OpenJDK 64-Bit Server VM
+java.vm.info=mixed mode, sharing
+java.ext.dirs=/share/software/Java/jdk1.8.0_my/jre/lib/ext:/usr/java/packages/lib/ext
+java.endorsed.dirs=/share/software/Java/jdk1.8.0_my/jre/lib/endorsed
+sun.boot.library.path=/share/software/Java/jdk1.8.0_my/jre/lib/amd64
+java.library.path=/usr/java/packages/lib/amd64:/usr/lib64:/lib64:/lib:/usr/lib
+java.home=/share/software/Java/jdk1.8.0_my/jre
+java.class.path=.
+sun.boot.class.path=/share/software/Java/jdk1.8.0_my/jre/lib/resources.jar:/share/software/Java/jdk1.8.0_my/jre/lib/rt.jar:/share/software/Java/jdk1.8.0_my/jre/lib/sunrsasign.jar:/share/software/Java/jdk1.8.0_my/jre/lib/jsse.jar:/share/software/Java/jdk1.8.0_my/jre/lib/jce.jar:/share/software/Java/jdk1.8.0_my/jre/lib/charsets.jar:/share/software/Java/jdk1.8.0_my/jre/lib/jfr.jar:/share/software/Java/jdk1.8.0_my/jre/classes
+java.vm.specification.vendor=Oracle Corporation
+java.vm.specification.version=1.8
+java.vm.vendor=Oracle Corporation
+sun.java.command=IntLoop 10000
+sun.java.launcher=SUN_STANDARD
+</properties>
+</vm_arguments>
+<tty>
+<blob name='MethodHandlesAdapterBlob' size='182000'>
+<sect index='1' size='182000' free='177660'/>
+</blob>
+<writer thread='140380559812368'/>
+    535    1     n       java.lang.invoke.MethodHandle::linkToStatic(LL)L (native)   (static)
+    563    2     n       java.lang.invoke.MethodHandle::linkToStatic(LLL)L (native)   (static)
+<writer thread='140380386924304'/>
+    597    3             java.lang.String::indexOf (70 bytes)
+<writer thread='140380559812368'/>
+    603    4     n       java.lang.invoke.MethodHandle::linkToStatic(LL)V (native)   (static)
+    606    5     n       java.lang.invoke.MethodHandle::linkToStatic(LL)J (native)   (static)
+    612    6     n       java.lang.invoke.MethodHandle::linkToStatic(LIL)V (native)   (static)
+<writer thread='140380386924304'/>
+<opto_assembly compile_id='3'>
+{method}
+ - this oop:          0x00007facdc417550
+ - method holder:     &apos;java/lang/String&apos;
+ - constants:         0x00007facdc41a410 constant pool [558] {0x00007facdc41a410} for &apos;java/lang/String&apos; cache=0x00007facdc4aef40
+ - access:            0xc1000001  public 
+ - name:              &apos;indexOf&apos;
+ - signature:         &apos;(II)I&apos;
+ - max stack:         4
+ - max locals:        6
+ - size of params:    3
+ - method size:       12
+ - vtable index:      -2
+ - i2i entry:         0x00007facdf25e3a0
+ - adapters:          AHE@0x0000000001825100: 0xbaa00000 i2c: 0x00007facdf31da20 c2i: 0x00007facdf31db6c c2iUV: 0x00007facdf31db33
+ - compiled entry     0x00007facdf31db6c
+ - code size:         70
+ - code start:        0x00007facdc4174f0
+ - code end (excl):   0x00007facdc417536
+ - method data:       0x00007facdc634b00
+ - checked ex length: 0
+ - linenumber start:  0x00007facdc417536
+ - localvar length:   0
+#
+#  int ( java/lang/String:NotNull:exact *, int, int )
+#
+#r018 rsi:rsi   : parm 0: java/lang/String:NotNull:exact *
+#r016 rdx   : parm 1: int
+#r010 rcx   : parm 2: int
+# -- Old rsp -- Framesize: 48 --
+#r191 rsp+44: in_preserve
+#r190 rsp+40: return address
+#r189 rsp+36: in_preserve
+#r188 rsp+32: saved fp register
+#r187 rsp+28: pad2, stack alignment
+#r186 rsp+24: pad2, stack alignment
+#r185 rsp+20: Fixed slot 1
+#r184 rsp+16: Fixed slot 0
+#r195 rsp+12: spill
+#r194 rsp+ 8: spill
+#r193 rsp+ 4: spill
+#r192 rsp+ 0: spill
+#
+000   N142: #	B1 &lt;- BLOCK HEAD IS JUNK   Freq: 1
+000   	movl    rscratch1, [j_rarg0 + oopDesc::klass_offset_in_bytes()]	# compressed klass
+	decode_klass_not_null rscratch1, rscratch1
+	cmpq    rax, rscratch1	 # Inline cache check
+	jne     SharedRuntime::_ic_miss_stub
+	nop	# nops to align entry point
+
+000
+020   B1: #	B17 B2 &lt;- BLOCK HEAD IS JUNK   Freq: 1
+020   	# stack bang
+	pushq   rbp	# Save rbp
+	subq    rsp, #32	# Create frame
+
+02c   	movl    R10, [RSI + #12 (8-bit)]	# compressed ptr ! Field: java/lang/String.value
+030   	movl    RBP, [R10 + #12 (8-bit)]	# range
+034   	NullCheck R10
+034
+034   B2: #	B14 B3 &lt;- B1  Freq: 0.999999
+034   	movl    RAX, #-1	# int
+039   	testl   RCX, RCX
+03b   	jl,s   B14  P=0.000000 C=497.000000
+03b
+03d   B3: #	B12 B4 &lt;- B2  Freq: 0.999999
+03d   	cmpl    RCX, RBP
+03f   	jge,s   B12  P=0.006036 C=497.000000
+03f
+041   B4: #	B15 B5 &lt;- B3 B14  Freq: 0.993963
+041   	cmpl    RDX, #65536
+047   	jge,s   B15  P=0.000000 C=494.000000
+047
+049   B5: #	B12 B6 &lt;- B4  Freq: 0.993962
+049   	cmpl    RCX, RBP
+04b   	jge,s   B12  P=0.028896 C=9690.000000
+04b
+04d   B6: #	B13 B7 &lt;- B5  Freq: 0.965241
+04d   	cmpl    RCX, RBP	# unsigned
+04f   	jnb,us  B13  P=0.000001 C=-1.000000
+04f
+051   B7: #	B13 B8 &lt;- B6  Freq: 0.96524
+051   	movl    R8, RBP	# spill
+054   	decl    R8	# int
+057   	cmpl    R8, RBP	# unsigned
+05a   	jnb,us  B13  P=0.000001 C=-1.000000
+      	nop 	# 4 bytes pad for loops and calls
+
+060   B8: #	B11 B9 &lt;- B7 B9 	Loop: B8-B9 inner  Freq: 18.8953
+060   	movzwl  R11, [R10 + #16 + RCX &lt;&lt; #1]	# ushort/char
+066   	cmpl    R11, RDX
+069   	je,s   B11  P=0.022848 C=9410.000000
+069
+06b   B9: #	B8 B10 &lt;- B8  Freq: 18.4636
+06b   	incl    RCX	# int
+06d   	cmpl    RCX, RBP
+06f   	jl,s   B8	# loop end  P=0.971104 C=9195.000000
+06f
+071   B10: #	B12 &lt;- B9  Freq: 0.533519
+071   	jmp,s   B12
+071
+073   B11: #	B12 &lt;- B8  Freq: 0.43172
+073   	movl    RAX, RCX	# spill
+073
+075   B12: #	N142 &lt;- B3 B11 B10 B5 B16  Freq: 0.999997
+075   	addq    rsp, 32	# Destroy frame
+	popq   rbp
+	testl  rax, [rip + #offset_to_poll_page]	# Safepoint: poll for GC
+
+080   	ret
+080
+081   B13: #	N142 &lt;- B7 B6  Freq: 1.95612e-06
+081   	movl    RSI, #-122	# int
+086   	movl    [rsp + #0], RDX	# spill
+089   	movl    [rsp + #4], R10	# spill
+08e   	movl    [rsp + #8], RCX	# spill
+      	nop 	# 1 bytes pad for loops and calls
+093   	call,static  wrapper for: uncommon_trap(reason=&apos;predicate&apos; action=&apos;maybe_recompile&apos;)
+        # java.lang.String::indexOf @ bci:43  L[0]=_ L[1]=rsp + #0 L[2]=_ L[3]=RBP L[4]=rsp + #4 L[5]=rsp + #8
+        # OopMap{[4]=NarrowOop off=152}
+098   	int3	# ShouldNotReachHere
+098
+09d   B14: #	B4 &lt;- B2  Freq: 4.76837e-07
+09d   	xorl    RCX, RCX	# int
+09f   	jmp,s   B4
+09f
+0a1   B15: #	B18 B16 &lt;- B4  Freq: 4.73958e-07
+      	nop 	# 2 bytes pad for loops and calls
+0a3   	call,static  java.lang.String::indexOfSupplementary
+        # java.lang.String::indexOf @ bci:66  L[0]=_ L[1]=_ L[2]=_ L[3]=_ L[4]=_ L[5]=_
+        # OopMap{off=168}
+0a8
+0a8   B16: #	B12 &lt;- B15  Freq: 4.73949e-07
+        # Block is sole successor of call
+0a8   	jmp,s   B12
+0a8
+0aa   B17: #	N142 &lt;- B1  Freq: 1.01328e-06
+0aa   	movl    RSI, #-10	# int
+0af   	call,static  wrapper for: uncommon_trap(reason=&apos;null_check&apos; action=&apos;maybe_recompile&apos;)
+        # java.lang.String::indexOf @ bci:4  L[0]=_ L[1]=_ L[2]=_ L[3]=_ L[4]=_ L[5]=_ STK[0]=#NULL
+        # OopMap{off=180}
+0b4   	int3	# ShouldNotReachHere
+0b4
+0b9   B18: #	N142 &lt;- B15  Freq: 4.73958e-12
+0b9   	# exception oop is in rax; no code emitted
+0b9   	movq    RSI, RAX	# spill
+0bc   	addq    rsp, 32	# Destroy frame
+	popq   rbp
+
+0c1   	jmp     rethrow_stub
+0c1
+
+</opto_assembly>
+    743    7             java.lang.String::hashCode (55 bytes)
+<opto_assembly compile_id='7'>
+{method}
+ - this oop:          0x00007facdc4173c0
+ - method holder:     &apos;java/lang/String&apos;
+ - constants:         0x00007facdc41a410 constant pool [558] {0x00007facdc41a410} for &apos;java/lang/String&apos; cache=0x00007facdc4aef40
+ - access:            0xc1000001  public 
+ - name:              &apos;hashCode&apos;
+ - signature:         &apos;()I&apos;
+ - max stack:         4
+ - max locals:        4
+ - size of params:    1
+ - method size:       12
+ - vtable index:      3
+ - i2i entry:         0x00007facdf25e3a0
+ - adapters:          AHE@0x0000000001824bd8: 0xb0000000 i2c: 0x00007facdf30e5e0 c2i: 0x00007facdf30e700 c2iUV: 0x00007facdf30e6c7
+ - compiled entry     0x00007facdf30e700
+ - code size:         55
+ - code start:        0x00007facdc417370
+ - code end (excl):   0x00007facdc4173a7
+ - method data:       0x00007facdc5ef930
+ - checked ex length: 0
+ - linenumber start:  0x00007facdc4173a7
+ - localvar length:   0
+#
+#  int ( java/lang/String:NotNull:exact * )
+#
+#r018 rsi:rsi   : parm 0: java/lang/String:NotNull:exact *
+# -- Old rsp -- Framesize: 48 --
+#r191 rsp+44: in_preserve
+#r190 rsp+40: return address
+#r189 rsp+36: in_preserve
+#r188 rsp+32: saved fp register
+#r187 rsp+28: pad2, stack alignment
+#r186 rsp+24: pad2, stack alignment
+#r185 rsp+20: Fixed slot 1
+#r184 rsp+16: Fixed slot 0
+#r195 rsp+12: spill
+#r194 rsp+ 8: spill
+#r193 rsp+ 4: spill
+#r192 rsp+ 0: spill
+#
+000   N111: #	B1 &lt;- BLOCK HEAD IS JUNK   Freq: 1
+000   	movl    rscratch1, [j_rarg0 + oopDesc::klass_offset_in_bytes()]	# compressed klass
+	decode_klass_not_null rscratch1, rscratch1
+	cmpq    rax, rscratch1	 # Inline cache check
+	jne     SharedRuntime::_ic_miss_stub
+	nop	# nops to align entry point
+
+000
+020   B1: #	B10 B2 &lt;- BLOCK HEAD IS JUNK   Freq: 1
+020   	# stack bang
+	pushq   rbp	# Save rbp
+	subq    rsp, #32	# Create frame
+
+02c   	movq    RBX, RSI	# spill
+02f   	movl    RAX, [RSI + #16 (8-bit)]	# int ! Field: java/lang/String.hash
+032   	testl   RAX, RAX
+034   	jne,s   B10  P=0.485207 C=507.000000
+034
+036   B2: #	B13 B3 &lt;- B1  Freq: 0.514793
+036   	movl    R11, [RSI + #12 (8-bit)]	# compressed ptr ! Field: java/lang/String.value
+03a   	movl    R10, [R11 + #12 (8-bit)]	# range
+03e   	NullCheck R11
+03e
+03e   B3: #	B12 B4 &lt;- B2  Freq: 0.514792
+03e   	xorl    R9, R9	# int
+041   	testl   R10, R10
+044   	jle,s   B12  P=0.000000 C=261.000000
+044
+046   B4: #	B11 B5 &lt;- B3  Freq: 0.514792
+046   	testl  R10, R10	# unsigned
+049   	jbe,us  B11  P=0.000001 C=-1.000000
+049
+04b   B5: #	B11 B6 &lt;- B4  Freq: 0.514792
+04b   	movl    RCX, R10	# spill
+04e   	decl    RCX	# int
+050   	cmpl    RCX, R10	# unsigned
+053   	jnb,us  B11  P=0.000001 C=-1.000000
+053
+055   B6: #	B8 &lt;- B5  Freq: 0.514791
+055   	xorl    RAX, RAX	# int
+057   	jmp,s   B8
+      	nop 	# 7 bytes pad for loops and calls
+
+060   B7: #	B8 &lt;- B8  top-of-loop Freq: 12.3805
+060   	movl    R8, RAX	# spill
+063   	sall    R8, #5
+067   	subl    R8, RAX	# int
+06a   	movl    RAX, R8	# spill
+06a
+06d   B8: #	B7 B9 &lt;- B6 B7 	Loop: B8-B7 inner  Freq: 12.8953
+06d   	movzwl  R8, [R11 + #16 + R9 &lt;&lt; #1]	# ushort/char
+073   	addl    RAX, R8	# int
+076   	incl    R9	# int
+079   	cmpl    R9, R10
+07c   	jl,s   B7	# loop end  P=0.960079 C=6301.000000
+07c
+07e   B9: #	B10 &lt;- B8  Freq: 0.514791
+07e   	movl    [RBX + #16 (8-bit)], RAX	# int ! Field: java/lang/String.hash
+07e
+081   B10: #	N111 &lt;- B9 B12 B1  Freq: 0.999998
+081   	addq    rsp, 32	# Destroy frame
+	popq   rbp
+	testl  rax, [rip + #offset_to_poll_page]	# Safepoint: poll for GC
+
+08c   	ret
+08c
+08d   B11: #	N111 &lt;- B5 B4  Freq: 1.03642e-06
+08d   	movl    RSI, #-122	# int
+092   	movl    RBP, R11	# spill
+095   	movq    [rsp + #0], RBX	# spill
+      	nop 	# 2 bytes pad for loops and calls
+09b   	call,static  wrapper for: uncommon_trap(reason=&apos;predicate&apos; action=&apos;maybe_recompile&apos;)
+        # java.lang.String::hashCode @ bci:33  L[0]=rsp + #0 L[1]=#0 L[2]=RBP L[3]=#0
+        # OopMap{rbp=NarrowOop [0]=Oop off=160}
+0a0   	int3	# ShouldNotReachHere
+0a0
+0a5   B12: #	B10 &lt;- B3  Freq: 2.57396e-07
+0a5   	xorl    RAX, RAX	# int
+0a7   	jmp,s   B10
+0a7
+0a9   B13: #	N111 &lt;- B2  Freq: 5.21629e-07
+0a9   	movl    RSI, #-10	# int
+      	nop 	# 1 bytes pad for loops and calls
+0af   	call,static  wrapper for: uncommon_trap(reason=&apos;null_check&apos; action=&apos;maybe_recompile&apos;)
+        # java.lang.String::hashCode @ bci:13  L[0]=_ L[1]=_ L[2]=_ L[3]=_ STK[0]=#NULL
+        # OopMap{off=180}
+0b4   	int3	# ShouldNotReachHere
+0b4
+
+</opto_assembly>
+    776    8             java.lang.String::equals (81 bytes)
+<opto_assembly compile_id='8'>
+{method}
+ - this oop:          0x00007facdc416950
+ - method holder:     &apos;java/lang/String&apos;
+ - constants:         0x00007facdc41a410 constant pool [558] {0x00007facdc41a410} for &apos;java/lang/String&apos; cache=0x00007facdc4aef40
+ - access:            0xc1000001  public 
+ - name:              &apos;equals&apos;
+ - signature:         &apos;(Ljava/lang/Object;)Z&apos;
+ - max stack:         4
+ - max locals:        7
+ - size of params:    2
+ - method size:       12
+ - intrinsic id:      55 _equals
+ - vtable index:      1
+ - i2i entry:         0x00007facdf25e3a0
+ - adapters:          AHE@0x0000000001824c30: 0xbb000000 i2c: 0x00007facdf30e220 c2i: 0x00007facdf30e344 c2iUV: 0x00007facdf30e30b
+ - compiled entry     0x00007facdf30e344
+ - code size:         81
+ - code start:        0x00007facdc4168e0
+ - code end (excl):   0x00007facdc416931
+ - method data:       0x00007facdc65f000
+ - checked ex length: 0
+ - linenumber start:  0x00007facdc416931
+ - localvar length:   0
+#
+#  bool ( java/lang/String:NotNull:exact *, java/lang/Object * )
+#
+#r018 rsi:rsi   : parm 0: java/lang/String:NotNull:exact *
+#r016 rdx:rdx   : parm 1: java/lang/Object *
+# -- Old rsp -- Framesize: 64 --
+#r191 rsp+60: in_preserve
+#r190 rsp+56: return address
+#r189 rsp+52: in_preserve
+#r188 rsp+48: saved fp register
+#r187 rsp+44: pad2, stack alignment
+#r186 rsp+40: pad2, stack alignment
+#r185 rsp+36: Fixed slot 1
+#r184 rsp+32: Fixed slot 0
+#r199 rsp+28: spill
+#r198 rsp+24: spill
+#r197 rsp+20: spill
+#r196 rsp+16: spill
+#r195 rsp+12: spill
+#r194 rsp+ 8: spill
+#r193 rsp+ 4: spill
+#r192 rsp+ 0: spill
+#
+000   N285: #	B1 &lt;- BLOCK HEAD IS JUNK   Freq: 1
+000   	movl    rscratch1, [j_rarg0 + oopDesc::klass_offset_in_bytes()]	# compressed klass
+	decode_klass_not_null rscratch1, rscratch1
+	cmpq    rax, rscratch1	 # Inline cache check
+	jne     SharedRuntime::_ic_miss_stub
+	nop	# nops to align entry point
+
+000
+020   B1: #	B23 B2 &lt;- BLOCK HEAD IS JUNK   Freq: 1
+020   	# stack bang
+	pushq   rbp	# Save rbp
+	subq    rsp, #48	# Create frame
+
+02c   	cmpq    RSI, RDX	# ptr
+02f   	je,u  B23  P=0.007137 C=4624.000000
+02f
+035   B2: #	B7 B3 &lt;- B1  Freq: 0.992863
+035   	xorl    RAX, RAX	# int
+037   	testq   RDX, RDX	# ptr
+03a   	je,s   B7  P=0.001000 C=-1.000000
+03a
+03c   B3: #	B26 B4 &lt;- B2  Freq: 0.99187
+03c   	movl    R10, [RDX + #8 (8-bit)]	# compressed klass ptr
+040   	cmpl    R10, narrowklass: precise klass java/lang/String: 0x00000000017f6918:Constant:exact *	# compressed klass ptr
+047   	jne,u  B26  P=0.000000 C=-1.000000
+047
+04d   B4: #	B27 B5 &lt;- B3  Freq: 0.99187
+04d   	movl    R9, [RSI + #12 (8-bit)]	# compressed ptr ! Field: java/lang/String.value
+051   	movl    RBX, [R9 + #12 (8-bit)]	# range
+055   	NullCheck R9
+055
+055   B5: #	B28 B6 &lt;- B4  Freq: 0.991869
+055   	# checkcastPP of RDX
+055   	movl    RCX, [RDX + #12 (8-bit)]	# compressed ptr ! Field: java/lang/String.value
+058   	movl    R8, [RCX + #12 (8-bit)]	# range
+05c   	NullCheck RCX
+05c
+05c   B6: #	B8 B7 &lt;- B5  Freq: 0.991868
+05c   	cmpl    RBX, R8
+05f   	je,s   B8  P=0.061874 C=4590.000000
+05f
+061   B7: #	N285 &lt;- B23 B20 B15 B12 B22 B6 B2  Freq: 0.999998
+061   	addq    rsp, 48	# Destroy frame
+	popq   rbp
+	testl  rax, [rip + #offset_to_poll_page]	# Safepoint: poll for GC
+
+06c   	ret
+06c
+06d   B8: #	B22 B9 &lt;- B6  Freq: 0.0613705
+06d   	testl   RBX, RBX
+06f   	je     B22  P=0.021018 C=4282.000000
+06f
+075   B9: #	B10 &lt;- B8  Freq: 0.0600806
+075   	movl    R11, RBX	# spill
+078   	decl    R11	# int
+07b   	movslq  R10, RBX	# i2l
+07e   	movl    RDX, RBX	# spill
+080   	addl    RDX, #-2	# int
+083   	movl    R14, #-1	# int
+089   	cmpl    RDX, R14
+08c   	cmovllt RDX, R14	# max
+090   	movl    RDI, R11	# spill
+090
+093   B10: #	B24 B11 &lt;- B9 B13 	Loop: B10-B13 inner pre of N329 Freq: 0.11482
+093   	movl    R13, R11	# spill
+096   	subl    R13, RDI	# int
+099   	cmpl    R13, RBX	# unsigned
+09c   	jnb,u  B24  P=0.000001 C=-1.000000
+09c
+0a2   B11: #	B25 B12 &lt;- B10  Freq: 0.11482
+0a2   	movslq  RBP, RDI	# i2l
+0a5   	movq    RSI, R10	# spill
+0a8   	subq    RSI, RBP	# long
+0ab   	movzwl  RBP, [R9 + #14 + RSI &lt;&lt; #1]	# ushort/char
+0b1   	cmpl    R13, R8	# unsigned
+0b4   	jnb,u  B25  P=0.000001 C=-1.000000
+0b4
+0ba   B12: #	B7 B13 &lt;- B11  Freq: 0.11482
+0ba   	movzwl  RSI, [RCX + #14 + RSI &lt;&lt; #1]	# ushort/char
+0bf   	cmpl    RBP, RSI
+0c1   	jne,s   B7  P=0.046517 C=4192.000000
+0c1
+0c3   B13: #	B10 B14 &lt;- B12  Freq: 0.109479
+0c3   	decl    RDI	# int
+0c5   	cmpl    RDI, RDX
+0c7   	jg,s   B10	# loop end  P=0.500000 C=3997.000000
+0c7
+0c9   B14: #	B17 B15 &lt;- B13  Freq: 0.0547393
+0c9   	movl    RSI, RBX	# spill
+0cb   	subl    RSI, R8	# int
+0ce   	decl    RSI	# int
+0d0   	cmpl    RSI, R14
+0d3   	cmovllt RSI, R14	# max
+0d7   	cmpl    RDI, RSI
+0d9   	jle,s   B17  P=0.000001 C=-1.000000
+      	nop 	# 5 bytes pad for loops and calls
+
+0e0   B15: #	B7 B16 &lt;- B14 B16 	Loop: B15-B16 inner main of N111 Freq: 0.822433
+0e0   	movslq  RDX, RDI	# i2l
+0e3   	movq    RBP, R10	# spill
+0e6   	subq    RBP, RDX	# long
+0e9   	movzwl  RDX, [RCX + #14 + RBP &lt;&lt; #1]	# ushort/char
+0ee   	movzwl  R13, [R9 + #14 + RBP &lt;&lt; #1]	# ushort/char
+0f4   	cmpl    R13, RDX
+0f7   	jne     B7  P=0.046517 C=4192.000000
+0f7
+0fd   B16: #	B15 B17 &lt;- B15  Freq: 0.784175
+0fd   	decl    RDI	# int
+0ff   	cmpl    RDI, RSI
+101   	jg,s   B15	# loop end  P=0.978982 C=3997.000000
+101
+103   B17: #	B22 B18 &lt;- B14 B16  Freq: 0.016482
+103   	cmpl    RDI, #-1
+106   	je,s   B22  P=0.500000 C=-1.000000
+106
+108   B18: #	B24 B19 &lt;- B17 B21 	Loop: B18-B21 inner post of N329 Freq: 0.0157494
+108   	movl    R13, R11	# spill
+10b   	subl    R13, RDI	# int
+10e   	cmpl    R13, RBX	# unsigned
+111   	jnb,us  B24  P=0.000001 C=-1.000000
+111
+113   B19: #	B25 B20 &lt;- B18  Freq: 0.0157494
+113   	movslq  RDX, RDI	# i2l
+116   	movq    RSI, R10	# spill
+119   	subq    RSI, RDX	# long
+11c   	movzwl  RBP, [R9 + #14 + RSI &lt;&lt; #1]	# ushort/char
+122   	cmpl    R13, R8	# unsigned
+125   	jnb,us  B25  P=0.000001 C=-1.000000
+125
+127   B20: #	B7 B21 &lt;- B19  Freq: 0.0157493
+127   	movzwl  RDX, [RCX + #14 + RSI &lt;&lt; #1]	# ushort/char
+12c   	cmpl    RBP, RDX
+12e   	jne     B7  P=0.046517 C=4192.000000
+12e
+134   B21: #	B18 B22 &lt;- B20  Freq: 0.0150167
+134   	decl    RDI	# int
+136   	cmpl    RDI, #-1
+139   	jne,s   B18	# loop end  P=0.500000 C=3997.000000
+139
+13b   B22: #	B7 &lt;- B17 B8 B21  Freq: 0.0170393
+13b   	movl    RAX, #1	# int
+140   	jmp     B7
+140
+145   B23: #	B7 &lt;- B1  Freq: 0.0071367
+145   	movl    RAX, #1	# int
+14a   	jmp     B7
+14a
+14f   B24: #	N285 &lt;- B18 B10  Freq: 1.32303e-07
+14f   	movl    RSI, #-28	# int
+154   	movl    RBP, RDI	# spill
+156   	movl    [rsp + #4], RCX	# spill
+15a   	movl    [rsp + #12], R9	# spill
+15f   	movl    [rsp + #16], R13	# spill
+      	nop 	# 3 bytes pad for loops and calls
+167   	call,static  wrapper for: uncommon_trap(reason=&apos;range_check&apos; action=&apos;make_not_entrant&apos;)
+        # java.lang.String::equals @ bci:60  L[0]=_ L[1]=_ L[2]=_ L[3]=RBP L[4]=rsp + #12 L[5]=rsp + #4 L[6]=rsp + #16 STK[0]=rsp + #12 STK[1]=rsp + #16
+        # OopMap{[4]=NarrowOop [12]=NarrowOop off=364}
+16c   	int3	# ShouldNotReachHere
+16c
+171   B25: #	N285 &lt;- B19 B11  Freq: 1.32303e-07
+171   	movl    RSI, #-28	# int
+176   	movl    [rsp + #0], RDI	# spill
+179   	movl    [rsp + #4], R9	# spill
+17e   	movl    [rsp + #16], RCX	# spill
+182   	movl    [rsp + #20], R13	# spill
+187   	call,static  wrapper for: uncommon_trap(reason=&apos;range_check&apos; action=&apos;make_not_entrant&apos;)
+        # java.lang.String::equals @ bci:65  L[0]=_ L[1]=_ L[2]=_ L[3]=rsp + #0 L[4]=rsp + #4 L[5]=rsp + #16 L[6]=rsp + #20 STK[0]=RBP STK[1]=rsp + #16 STK[2]=rsp + #20
+        # OopMap{[4]=NarrowOop [16]=NarrowOop off=396}
+18c   	int3	# ShouldNotReachHere
+18c
+191   B26: #	N285 &lt;- B3  Freq: 1e-35
+191   	movq    RBP, RSI	# spill
+194   	movq    [rsp + #8], RDX	# spill
+199   	movl    RSI, #-34	# int
+      	nop 	# 1 bytes pad for loops and calls
+19f   	call,static  wrapper for: uncommon_trap(reason=&apos;class_check&apos; action=&apos;maybe_recompile&apos;)
+        # java.lang.String::equals @ bci:8  L[0]=RBP L[1]=rsp + #8 L[2]=_ L[3]=_ L[4]=_ L[5]=_ L[6]=_ STK[0]=rsp + #8
+        # OopMap{rbp=Oop [8]=Oop off=420}
+1a4   	int3	# ShouldNotReachHere
+1a4
+1a9   B27: #	N285 &lt;- B4  Freq: 1.00504e-06
+1a9   	movl    RSI, #-10	# int
+      	nop 	# 1 bytes pad for loops and calls
+1af   	call,static  wrapper for: uncommon_trap(reason=&apos;null_check&apos; action=&apos;maybe_recompile&apos;)
+        # java.lang.String::equals @ bci:23  L[0]=_ L[1]=_ L[2]=_ L[3]=_ L[4]=_ L[5]=_ L[6]=_ STK[0]=#NULL
+        # OopMap{off=436}
+1b4   	int3	# ShouldNotReachHere
+1b4
+1b9   B28: #	N285 &lt;- B5  Freq: 1.00504e-06
+1b9   	movl    RSI, #-10	# int
+      	nop 	# 1 bytes pad for loops and calls
+1bf   	call,static  wrapper for: uncommon_trap(reason=&apos;null_check&apos; action=&apos;maybe_recompile&apos;)
+        # java.lang.String::equals @ bci:30  L[0]=_ L[1]=_ L[2]=_ L[3]=_ L[4]=_ L[5]=_ L[6]=_ STK[0]=_ STK[1]=#NULL
+        # OopMap{off=452}
+1c4   	int3	# ShouldNotReachHere
+1c4
+
+</opto_assembly>
+    807    9             java.util.LinkedList::indexOf (73 bytes)
+<opto_assembly compile_id='9'>
+{method}
+ - this oop:          0x00007facdc6bc950
+ - method holder:     &apos;java/util/LinkedList&apos;
+ - constants:         0x00007facdc6beeb0 constant pool [335] {0x00007facdc6beeb0} for &apos;java/util/LinkedList&apos; cache=0x00007facdc6bfdb0
+ - access:            0xc1000001  public 
+ - name:              &apos;indexOf&apos;
+ - signature:         &apos;(Ljava/lang/Object;)I&apos;
+ - max stack:         3
+ - max locals:        4
+ - size of params:    2
+ - method size:       12
+ - vtable index:      26
+ - i2i entry:         0x00007facdf25e3a0
+ - adapters:          AHE@0x0000000001824c30: 0xbb000000 i2c: 0x00007facdf30e220 c2i: 0x00007facdf30e344 c2iUV: 0x00007facdf30e30b
+ - compiled entry     0x00007facdf30e344
+ - code size:         73
+ - code start:        0x00007facdc6bc8f0
+ - code end (excl):   0x00007facdc6bc939
+ - method data:       0x00007facdc6c0980
+ - checked ex length: 0
+ - linenumber start:  0x00007facdc6bc939
+ - localvar length:   0
+#
+#  int ( java/util/LinkedList:NotNull *, java/lang/Object * )
+#
+#r018 rsi:rsi   : parm 0: java/util/LinkedList:NotNull *
+#r016 rdx:rdx   : parm 1: java/lang/Object *
+# -- Old rsp -- Framesize: 64 --
+#r191 rsp+60: in_preserve
+#r190 rsp+56: return address
+#r189 rsp+52: in_preserve
+#r188 rsp+48: saved fp register
+#r187 rsp+44: pad2, stack alignment
+#r186 rsp+40: pad2, stack alignment
+#r185 rsp+36: Fixed slot 1
+#r184 rsp+32: Fixed slot 0
+#r199 rsp+28: spill
+#r198 rsp+24: spill
+#r197 rsp+20: spill
+#r196 rsp+16: spill
+#r195 rsp+12: spill
+#r194 rsp+ 8: spill
+#r193 rsp+ 4: spill
+#r192 rsp+ 0: spill
+#
+000   N170: #	B1 &lt;- BLOCK HEAD IS JUNK   Freq: 1
+000   	movl    rscratch1, [j_rarg0 + oopDesc::klass_offset_in_bytes()]	# compressed klass
+	decode_klass_not_null rscratch1, rscratch1
+	cmpq    rax, rscratch1	 # Inline cache check
+	jne     SharedRuntime::_ic_miss_stub
+	nop	# nops to align entry point
+
+000
+020   B1: #	B17 B2 &lt;- BLOCK HEAD IS JUNK   Freq: 1
+020   	# stack bang
+	pushq   rbp	# Save rbp
+	subq    rsp, #48	# Create frame
+
+02c   	movq    RBP, RSI	# spill
+02f   	movl    R11, [RDX + #8 (8-bit)]	# compressed klass ptr
+033   	NullCheck RDX
+033
+033   B2: #	B13 B3 &lt;- B1  Freq: 1
+033   	movl    RBP, [RSI + #20 (8-bit)]	# compressed ptr ! Field: java/util/LinkedList.first
+036   	testl   RBP, RBP	# compressed ptr
+038   	je     B13  P=0.008723 C=8025.000000
+038
+03e   B3: #	B15 B4 &lt;- B2  Freq: 0.991277
+03e   	cmpl    R11, narrowklass: precise klass java/lang/String: 0x00000000017f6918:Constant:exact *	# compressed klass ptr
+045   	jne,u  B15  P=0.000001 C=-1.000000
+045
+04b   B4: #	B7 &lt;- B3  Freq: 0.991276
+04b   	# checkcastPP of RDX
+04b   	movl    R10, [RDX + #12 (8-bit)]	# compressed ptr ! Field: java/lang/String.value
+04f   	movl    R9, [R10 + #12 (8-bit)]	# range
+053   	decode_heap_oop_not_null R8,RBP
+056   	decode_heap_oop_not_null RBP,R10
+059   	leaq    R13, [R10 + #16 (8-bit)]	# ptr off8narrow
+05d   	xorl    R11, R11	# int
+060   	jmp,s   B7
+      	nop 	# 14 bytes pad for loops and calls
+
+070   B5: #	B13 B6 &lt;- B9 B10 B11  top-of-loop Freq: 101.929
+070   	movl    R8, [R8 + #16 (8-bit)]	# compressed ptr ! Field: java/util/LinkedList$Node.next
+074   	incl    R11	# int
+077   	testl  rax, [rip + #offset_to_poll_page]	# Safepoint: poll for GC        # java.util.LinkedList::indexOf @ bci:68  L[0]=_ L[1]=RDX L[2]=R11 L[3]=R8
+        # OopMap{r8=NarrowOop rdx=Oop rbp=Oop r13=Derived_oop_rbp off=119}
+07d   	testl   R8, R8	# compressed ptr
+080   	je     B13  P=0.008723 C=7955.000000
+080
+086   B6: #	B7 &lt;- B5  Freq: 101.04
+086   	decode_heap_oop_not_null R8,R8
+086
+086   B7: #	B14 B8 &lt;- B4 B6 	Loop: B7-B6 inner  Freq: 102.031
+086   	movl    R10, [R8 + #12 (8-bit)]	# compressed ptr ! Field: java/util/LinkedList$Node.item
+08a   	decode_heap_oop RCX,R10
+115   	cmpq    RDX, RCX	# ptr
+118   	je,u  B14  P=0.001000 C=-1.000000
+118
+11e   B8: #	B16 B9 &lt;- B7  Freq: 101.929
+11e   	movl    RBX, [R10 + #8 (8-bit)]	# compressed klass ptr
+122   	NullCheck R10
+122
+122   B9: #	B5 B10 &lt;- B8  Freq: 101.929
+122   	cmpl    RBX, narrowklass: precise klass java/lang/String: 0x00000000017f6918:Constant:exact *	# compressed klass ptr
+128   	jne,u  B5  P=0.100000 C=-1.000000
+128
+12e   B10: #	B5 B11 &lt;- B9  Freq: 91.7362
+12e   	# checkcastPP of RCX
+12e   	movl    R10, [RCX + #12 (8-bit)]	# compressed ptr ! Field: java/lang/String.value
+132   	movl    RBX, [R10 + #12 (8-bit)]	# range
+136   	cmpl    R9, RBX
+139   	jne     B5  P=0.001000 C=-1.000000
+139
+13f   B11: #	B5 B12 &lt;- B10  Freq: 91.6444
+13f   	decode_heap_oop_not_null RCX,R10
+142   	leaq    RSI, [R10 + #16 (8-bit)]	# ptr off8narrow
+146   	movq    RDI, R13	# spill
+149   	movl    RCX, R9	# spill
+14c   	String Equals RDI,RSI,RCX -&gt; RAX    // KILL XMM1, XMM0, RBX
+199   	testl   RAX, RAX
+19b   	je     B5  P=1.000000 C=7955.000000
+19b
+1a1   B12: #	B14 &lt;- B11  Freq: 4.36995e-05
+1a1   	jmp,s   B14
+1a1
+1a3   B13: #	B14 &lt;- B2 B5  Freq: 0.897822
+1a3   	movl    R11, #-1	# int
+1a3
+1a9   B14: #	N170 &lt;- B7 B12 B13  Freq: 0.999895
+1a9   	movl    RAX, R11	# spill
+1ac   	addq    rsp, 48	# Destroy frame
+	popq   rbp
+	testl  rax, [rip + #offset_to_poll_page]	# Safepoint: poll for GC
+
+1b7   	ret
+1b7
+1b8   B15: #	N170 &lt;- B3  Freq: 9.91277e-07
+1b8   	movl    RSI, #-122	# int
+1bd   	movq    [rsp + #0], RDX	# spill
+      	nop 	# 2 bytes pad for loops and calls
+1c3   	call,static  wrapper for: uncommon_trap(reason=&apos;predicate&apos; action=&apos;maybe_recompile&apos;)
+        # java.util.LinkedList::indexOf @ bci:47  L[0]=_ L[1]=rsp + #0 L[2]=#0 L[3]=RBP
+        # OopMap{rbp=NarrowOop [0]=Oop off=456}
+1c8   	int3	# ShouldNotReachHere
+1c8
+1cd   B16: #	N170 &lt;- B8  Freq: 0.000103283
+1cd   	movl    RSI, #-12	# int
+1d2   	movl    [rsp + #0], R11	# spill
+1d6   	movq    [rsp + #8], R8	# spill
+1db   	movq    [rsp + #16], RDX	# spill
+      	nop 	# 3 bytes pad for loops and calls
+1e3   	call,static  wrapper for: uncommon_trap(reason=&apos;null_check&apos; action=&apos;make_not_entrant&apos;)
+        # java.util.LinkedList::indexOf @ bci:52  L[0]=_ L[1]=rsp + #16 L[2]=rsp + #0 L[3]=rsp + #8 STK[0]=rsp + #16 STK[1]=#NULL
+        # OopMap{[8]=Oop [16]=Oop off=488}
+1e8   	int3	# ShouldNotReachHere
+1e8
+1ed   B17: #	N170 &lt;- B1  Freq: 4.76837e-07
+1ed   	movl    RSI, #-83	# int
+1f2   	movq    [rsp + #8], RDX	# spill
+1f7   	call,static  wrapper for: uncommon_trap(reason=&apos;unreached&apos; action=&apos;reinterpret&apos;)
+        # java.util.LinkedList::indexOf @ bci:3  L[0]=RBP L[1]=rsp + #8 L[2]=#0 L[3]=_ STK[0]=rsp + #8
+        # OopMap{rbp=Oop [8]=Oop off=508}
+1fc   	int3	# ShouldNotReachHere
+1fc
+
+</opto_assembly>
+    873   10             IntLoop::loop (28 bytes)
+<opto_assembly compile_id='10'>
+{method}
+ - this oop:          0x00007facdc813820
+ - method holder:     &apos;IntLoop&apos;
+ - constants:         0x00007facdc813490 constant pool [63] {0x00007facdc813490} for &apos;IntLoop&apos; cache=0x00007facdc8139b0
+ - access:            0xc1000008  static 
+ - name:              &apos;loop&apos;
+ - signature:         &apos;(I)V&apos;
+ - max stack:         3
+ - max locals:        3
+ - size of params:    1
+ - method size:       12
+ - vtable index:      -2
+ - i2i entry:         0x00007facdf25e3a0
+ - adapters:          AHE@0x0000000001825310: 0xa0000000 i2c: 0x00007facdf31ef20 c2i: 0x00007facdf31f065 c2iUV: 0x00007facdf31f02c
+ - compiled entry     0x00007facdf31f065
+ - code size:         28
+ - code start:        0x00007facdc8137f0
+ - code end (excl):   0x00007facdc81380c
+ - method data:       0x00007facdc813b60
+ - checked ex length: 0
+ - linenumber start:  0x00007facdc81380c
+ - localvar length:   0
+#
+#  void ( int )
+#
+#r018 rsi   : parm 0: int
+# -- Old rsp -- Framesize: 32 --
+#r191 rsp+28: in_preserve
+#r190 rsp+24: return address
+#r189 rsp+20: in_preserve
+#r188 rsp+16: saved fp register
+#r187 rsp+12: pad2, stack alignment
+#r186 rsp+ 8: pad2, stack alignment
+#r185 rsp+ 4: Fixed slot 1
+#r184 rsp+ 0: Fixed slot 0
+#
+abababab   N1: #	B1 &lt;- B1  Freq: 1
+abababab
+000   B1: #	N1 &lt;- BLOCK HEAD IS JUNK   Freq: 1
+000   	subq    rsp, #24	# Create frame
+	movq    [rsp + #16], rbp	# Save rbp
+
+00c   	addq    rsp, 16	# Destroy frame
+	popq   rbp
+	testl  rax, [rip + #offset_to_poll_page]	# Safepoint: poll for GC
+
+017   	ret
+017
+
+</opto_assembly>
+<writer thread='140380559812368'/>
+C1 Runtime statistics:
+ _resolve_invoke_virtual_cnt:     0
+ _resolve_invoke_opt_virtual_cnt: 0
+ _resolve_invoke_static_cnt:      0
+ _handle_wrong_method_cnt:        0
+ _ic_miss_cnt:                    0
+ _generic_arraycopy_cnt:          0
+ _generic_arraycopystub_cnt:      0
+ _byte_arraycopy_cnt:             0
+ _short_arraycopy_cnt:            0
+ _int_arraycopy_cnt:              0
+ _long_arraycopy_cnt:             0
+ _primitive_arraycopy_cnt:        0
+ _oop_arraycopy_cnt (C):          0
+ _oop_arraycopy_cnt (stub):       0
+ _arraycopy_slowcase_cnt:         0
+ _arraycopy_checkcast_cnt:        0
+ _arraycopy_checkcast_attempt_cnt:0
+ _new_type_array_slowcase_cnt:    0
+ _new_object_array_slowcase_cnt:  0
+ _new_instance_slowcase_cnt:      0
+ _new_multi_array_slowcase_cnt:   0
+ _monitorenter_slowcase_cnt:      0
+ _monitorexit_slowcase_cnt:       0
+ _patch_code_slowcase_cnt:        0
+ _throw_range_check_exception_count:            0:
+ _throw_index_exception_count:                  0:
+ _throw_div0_exception_count:                   0:
+ _throw_null_pointer_exception_count:           0:
+ _throw_class_cast_exception_count:             0:
+ _throw_incompatible_class_change_error_count:  0:
+ _throw_array_store_exception_count:            0:
+ _throw_count:                                  0:
+
+<statistics type='SharedRuntime'>
+    0 inline cache miss in compiled
+    0 wrong method
+    0 unresolved static call site
+    0 unresolved virtual call site
+    0 unresolved opt virtual call site
+   11 slow partial subtype
+   12 byte array copies
+   12 short array copies
+   12 int array copies
+   12 long array copies
+AdapterHandlerTable: empty 172 longest 3 total 155 average 1.280992
+AdapterHandlerTable: lookups 6625 buckets 7114 equals 6470 hits 6470 compact 6470
+</statistics>
+<statistics type='nmethod'>
+Statistics for 5 native nmethods:
+ N. total size  = 3520
+ N. relocation  = 280
+ N. main code   = 1680
+Statistics for 5 bytecoded nmethods:
+ total in heap  = 5736
+ relocation     = 168
+ main code      = 1472
+ stub code      = 136
+ oops           = 8
+ scopes data    = 592
+ scopes pcs     = 1648
+ dependencies   = 40
+ handler table  = 24
+ nul chk table  = 80
+Debug Data Chunks: 133, shared 20+11, non-SP&apos;s elided 1
+PcDesc Statistics:  1 queries, 12.00 comparisons per query
+  caches=5 queries=1/0, hits=0+0, tests=2+10, adds=1
+</statistics>
+<statistics type='opto'>
+--- Compiler Statistics ---
+Methods seen: 5  Methods parsed: 5  Nodes created: 4475
+Blocks parsed: 50  Blocks seen: 57
+34 original NULL checks - 22 elided (64%); optimizer leaves 25,
+6 made implicit (24%)
+CCP: 5  constants found: 0
+Total frameslots = 96, Max frameslots = 32
+Inserted 0 spill loads, 0 spill stores, 0 mem-mem moves and 0 copies.
+Total load cost=      0, store cost =      0, mem-mem cost =  0.00, copy cost =     0.
+Adjusted spill cost =       0.
+Conservatively coalesced 40 copies, 0 pairs, 11 post alloc.
+Used cisc instruction  0,  remained in register 36
+Average allocation trips 1.095238
+High Pressure Blocks = 0, Low Pressure Blocks = 0
+Nops added 0 bytes to total of 3539 bytes, for 0.00%
+Peephole: peephole rules applied: 0
+PhaseIdealLoop=34, sum _unique=9288
+</statistics>
+<statistics type='intrinsic'>
+Compiler intrinsic usage:
+     1 (100.0%) _equals (worked)
+     1 (100.0%) total (worked)
+</statistics>
+<writer thread='140380392593168'/>
+<destroy_vm stamp='0.916'/>
+<tty_done stamp='0.930'/>
+</tty>
+<hotspot_log_done stamp='0.930'/>
+</hotspot_log>

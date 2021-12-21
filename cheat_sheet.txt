@@ -1,0 +1,258 @@
+export PATH=/share/output-jdk9-dev-dbg/images/j2sdk-image/bin:$PATH
+export LD_LIBRARY_PATH=/share/OpenJDK/hsdis
+
+export CLASSPATH=/c/Users/D046063/public_html/hotspot/JavaOne2014/examples
+export _JAVA_OPTIONS="-XX:-TieredCompilation -XX:-UseOnStackReplacement -XX:CICompilerCount=1 -XX:-UseCompressedOops -Xbatch"
+
+
+=================================================
+=
+= AtomicLongTest DEMO
+=
+=================================================
+
+java -XX:CompileCommand="print AtomicLongTest.update" AtomicLongTest 2000000 | less
+
+gdb /share/output-jdk9-dev-dbg/images/j2sdk-image/bin
+run -XX:CompileCommand="break AtomicLongTest.update" AtomicLongTest 2000000
+
+display/i $pc
+
+call ((Metadata*)0x00007fffacadbe28)->print()
+
+
+b 'Assembler::addq(Address, int)'
+p imm32
+up
+up
+p *n
+p n->dump()
+
+down
+list
+p this
+ptype xaddL_no_resNode
+
+print opnd_array(2)->Name()
+$13 = 0x7ffff6b15c75 "immL"
+
+/share/output-jdk9-dev-dbg/hotspot/linux_amd64_compiler2/generated/adfiles/ad_x86_64.cpp
+
+ptype xaddL_no_resNode
+
+
+=================================================
+=
+= Options / TraceBytecodes / PrintInterpreter DEMO
+=
+=================================================
+
+java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -Xprintflags
+
+java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+PrintFlagsWithComments
+
+java -XX:+CountBytecodes HelloWorld
+
+java -XX:+PrintBytecodeHistogram HelloWorld
+
+java -XX:+TraceBytecodes HelloWorld  // search for the first occurence of 'iadd'
+
+java -XX:+PrintInterpreter | less
+
+=================================================
+=
+= TemplateInterpreter DEMO
+=
+=================================================
+
+gdb java
+run -XX:+PrintInterpreter HelloWorld | grep iadd
+b init_globals()         // this will create the template interpreter
+run HelloWorld
+fin
+b *0x00007fffeedeb400    // only now we can set the breakpoint...
+c
+x /12i $pc               // verify that this is the same bytecode like in the -XX:+PrintInterpreter example
+where                    // but notice that gdb has no clue of where we are
+
+=================================================
+
+ALT_BOOTDIR=/share/software/Java/jdk1.7.0/ ALT_OUTPUTDIR=/share/OpenJDK/output_amd64_jvmg ARCH_DATA_MODEL=64 make jvmg
+cp /share/OpenJDK/output_amd64_jvmg/linux_amd64_compiler2/jvmg/libjvm.so /share/OpenJDK/jdk1.7.0_hsx/jre/lib/amd64/server/libjvm.so
+cp /share/OpenJDK/output_amd64_jvmg/linux_amd64_compiler2/jvmg/libjvm.debuginfo /share/OpenJDK/jdk1.7.0_hsx/jre/lib/amd64/server/libjvm.debuginfo
+
+=================================================
+
+dis 2
+run -XX:-PrintInterpreter HelloWorld
+fin
+b *0x00007fffeedeb400
+where
+call mixed_ps($sp, $rbp, $pc)    // Verify the stack with the output of -XX:+TraceBytecodes
+                                 // in another window. 
+                                 // Maybe explain why it is not the first occurence of 'iadd' 
+				 // (TOSCA - Top Of Stack CAche) - see below
+
+x /12i $pc
+info symbol(0x7ffff73fb8e0)      // address points into the active TemplateTable
+
+call find($r13)   // r13 is the Bytecode Pointer (BCP)
+x /2b $r13        // print two bytecodes, 0x60 is IADD
+
+p ((void**)0x7ffff73fb8e0)[0x34] // print address of next template 
+call find(0x7fffeede9cc7)        // verify that it's indeed the codelet for the next bytecode
+
+=================================================
+// Maybe explain why it is not the first occurence of 'iadd' 
+// (TOSCA - Top Of Stack CAche)
+p 'Bytecodes::_iadd'
+p /x (int)'Bytecodes::_iadd'
+p 'TemplateTable::_template_table'['Bytecodes::_iadd']
+p 'TemplateTable::_template_table'['Bytecodes::_iconst_1']
+p 'TemplateTable::_template_table'['Bytecodes::_getfield']
+p /x (int)'Bytecodes::_fast_igetfield'
+p 'TemplateTable::_template_table'['Bytecodes::_fast_igetfield']
+=================================================
+
+
+b breakpoint
+-XX:StopInterpreterAt=116 -XX:+PrintInterpreter
+where
+call mixed_ps($sp, $rbp, $pc)
+call find($pc)
+x /16i xxxxx  // The 'iadd' interpreter codelet now looks different then before
+              // because the interpreter had to generate extra code for -XX:StopInterpreterAt 
+
+
+
+
+=================================================
+=
+= JIT Compiler DEMO
+=
+=================================================
+
+java -Xint IntLoop 10
+java -Xint IntLoop 100
+java -Xint IntLoop 1000
+
+export MY_OPTS="-XX:-TieredCompilation -XX:-UseOnStackReplacement -XX:CICompilerCount=1 -XX:LoopUnrollLimit=0"
+
+java -XX:+PrintCompilation $MY_OPTS IntLoop 10
+java -XX:+PrintCompilation $MY_OPTS IntLoop 100000000
+
+java -Xint LongLoop 10
+java -Xint LongLoop 100
+java -Xint LongLoop 1000
+
+java -XX:+PrintCompilation $MY_OPTS LongLoop 10
+java -XX:+PrintCompilation $MY_OPTS LongLoop 100
+java -XX:+PrintCompilation $MY_OPTS LongLoop 1000
+
+java -XX:+PrintAssembly -XX:+PrintCompilation $MY_OPTS IntLoop 10
+java -XX:+PrintAssembly -XX:+PrintCompilation $MY_OPTS LongLoop 10
+
+
+======================================================
+ 2nd JIT EXAMPLE
+======================================================
+
+
+java -XX:+PrintCompilation -verbose:gc $MY_OPTS LongLoopWithGC 100
+java -XX:+PrintCompilation -verbose:gc $MY_OPTS LongLoopWithGC 1000
+java -XX:+PrintCompilation -verbose:gc $MY_OPTS LongLoopWithGC 10000
+
+// Now try the same with IntLoopWithGC - should we see any differences?
+
+java -XX:+PrintCompilation -verbose:gc $MY_OPTS IntLoopWithGC 1000
+java -XX:+PrintCompilation -verbose:gc $MY_OPTS IntLoopWithGC 10000
+java -XX:+PrintCompilation -verbose:gc $MY_OPTS IntLoopWithGC 100000
+
+// Why don't we see any GC (or just one single GC)
+// Let's try to attach with a Java debugger to see what happens..
+
+java -XX:+PrintCompilation -verbose:gc -agentlib:jdwp=transport=dt_socket,address=8000,server=y,suspend=n $MY_OPTS IntLoopWithGC 100000
+jdb -attach 8000
+
+// But it works with 'LongLoopWithGC'!
+java -XX:+PrintCompilation -verbose:gc -agentlib:jdwp=transport=dt_socket,address=8000,server=y,suspend=n $MY_OPTS LongLoopWithGC 100000
+jdb -attach 8000
+
+suspend
+threads
+thread 0x1f1
+where
+
+
+
+// So let's try this in gdb..
+gdb java
+run -verbose:gc -XX:+PrintAssembly -XX:+PrintCompilation $MY_OPTS IntLoopWithGC 10000
+^C
+
+info threads
+thread 12
+where
+call mixed_ps($sp, $rbp, $pc)
+
+call find($pc)
+  // ptype CodeBlob
+  // call ((CodeBlob*)0x00007ffff1eb6e90)->as_nmethod_or_null()
+  // call ((nmethod*)0x00007ffff1eb6e90)->print()
+
+// We get a SIGSEGV at the end of the method - should we be scared?
+
+// Now run LongLoopWithGC in the debugger:
+
+run -verbose:gc -XX:+PrintCompilation $MY_OPTS LongLoopWithGC 10000
+
+// We get a lot more SIGSEGVs and this actually seems to be good!
+// Does anybody know why?
+
+p 'os::_polling_page'
+
+run -verbose:gc -XX:+PrintOptoAssembly -XX:+PrintCompilation $MY_OPTS IntLoopWithGC 10000
+run -verbose:gc -XX:+PrintOptoAssembly -XX:+PrintCompilation $MY_OPTS LongLoopWithGC 10000
+
+// Now exit gdb..
+java -verbose:gc -XX:+PrintSafepointStatistics -XX:+PrintCompilation $MY_OPTS IntLoopWithGC 10000
+java -verbose:gc -XX:+PrintSafepointStatistics -XX:+PrintCompilation $MY_OPTS LongLoopWithGC 10000
+
+
+java -XX:+PrintOptoAssembly -XX:+PrintCompilation $MY_OPTS IntLoop 10000
+// C2 completely optimzes the (empty) loops away:)
+
+java -XX:+PrintOptoAssembly -XX:+PrintCompilation $MY_OPTS LongLoop 10000
+// C2 can not optimze the loops away because 'long' loops contain SafePoints (i.e. they are not empty!)
+
+
+
+// Lets look at another nice tool - Xprof
+
+java  -Xprof -XX:+PrintCompilation $MY_OPTS LongLoopWithGC 10000
+
+// With the LongLoopWithGC example it works as expected..
+
+java  -Xprof -XX:+PrintCompilation $MY_OPTS IntLoopWithGC 10000
+
+// But not with our broken int-loop, you don't see ANY ticks in the compiled method 
+// (because there are no safepoints in the method)
+
+
+// Show example with implicit null check and deptimization
+
+// Investigate tying the profiling information (methodDataOop) to the nmethod insted
+// to the methodOop to gather call site specific profiling information
+
+
+
+
+
+
+
+
+Build hsdis
+-----------
+ - from hotspot/src/share/tools/hsdis do:
+ make all64 TARGET_DIR=/share/OpenJDK/hsdis BINUTILS=/share/software/binutils-2.24
+

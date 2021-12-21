@@ -1,0 +1,2180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <title>Open Heart Surgery: Analyzing and Debugging the HotSpot VM at the OS Level</title>
+  <meta name="copyright" content="Copyright &#169; 2014 volker.simonis@sap.com" />
+  <meta name="duration" content="60" />
+  <meta name="font-size-adjustment" content="-2"/>
+  <link rel="stylesheet" type="text/css" media="screen, projection, print" href="Slidy2/styles/slidy.css" />
+  <link rel="stylesheet" type="text/css" media="screen, projection, print" href="Slidy2/styles/w3c-blue.css" />
+  <script src="Slidy2/scripts/slidy.js" charset="utf-8" type="text/javascript"></script>
+  <link rel="stylesheet" href="css/monokai_sublime.css" />
+  <style type="text/css">
+    /*
+    pre {
+      background-color: black;
+      color: white;
+      border-style: solid;
+      border-width: thin;
+      border-color: lightgray;
+    }
+    */
+    div.background {
+      padding: 0 0.2em;
+      border-bottom-style: double;
+      border-bottom-color: #728EC2;
+      border-width: 0.2em;
+      background-color: white;
+      height: auto;
+    }
+    #head-icon {
+      margin: 1em 0;
+      padding: 0;
+      height: 1.6em;
+      max-width: none;
+      background: none repeat scroll 0 0 transparent
+    }
+    #head-logo {
+      margin: 1em 0;
+      padding: 0;
+      height: 1.6em;
+      background: none repeat scroll 0 0 transparent
+    }
+    div.slide h1 {
+      color: black;
+      font-size: 180%;
+      line-height: 1em;
+      margin: 0.4em 0 1em 0;
+      padding-left: 3.8em;
+      padding-right: 3.8em;
+      padding-top: none;
+      text-align: center;
+      height: 1em;
+      min-height: 1em;
+    }
+    div.slide.cover {
+      background-color: white;
+      color: black;
+    }
+    div.slide.cover h1 {
+      color: black;
+      min-height: 1.1em;
+      text-align: left;
+    }
+    div.slide.cover a {
+      color: black;
+    }
+    div.slide.cover a:visited {
+      color: black;
+    }
+    div.slide.cover a:link {
+      color: black;
+    }
+    div.slide.cover img.cover {
+      float:right;
+      margin: 2em 2em;
+      overflow:hidden;
+      width: 328px;
+      padding: 0em;
+    }
+    div.slide.cover h1 {
+      font-size:180%;
+    }
+
+    div.toc {
+      font-size: 100%;
+      width: 50%;
+    }
+
+    span.code {
+      font-family: monospace;
+    }
+
+  table.my {
+    background-color: #d3d3d3;#lightgray;
+    border-style: solid;
+    border-width: 1px;
+    border-color: black;
+    border-collapse: collapse;
+    margin: 0px 0px 0px 2px;
+    padding: 2px 4px;
+    width: auto;
+    overflow: auto;
+  }
+
+  table.my td {
+    border-width: 1px;
+    border-style: solid;
+    padding: 2px 4px;
+    background-color: white;
+    border-color: black;
+  }
+
+  table.my td.highlight {
+    border-width: 1px;
+    border-style: solid;
+    padding: 2px 4px;
+    background-color: #e8e8ff;
+    border-color: black;
+  }
+
+  table.my th {
+    border-width: 1px;
+    border-style: solid;
+    padding: 2px 4px;
+    font-weight: normal;
+    border-color: black;
+  }
+
+  table.my tr.footer {
+    background-color: #ffffe0;
+    border-color: black;
+  }
+  table.my th.footer {
+    background-color: #ffffe0;
+    border-color: black;
+  }
+  table.my td.footer {
+    font-family: arial, helvetica, sans-serif;
+    background-color: #ffffe0;
+    border-color: black;
+  }
+  div.vbox {
+    float: left;
+    height: 40%; width: 50%;
+    margin-top: -360px;
+  }
+  div.hbox {
+    width:60%;  margin-top: 0;
+    margin-left:auto; margin-right:auto;
+    height: 80%;
+    border:1px solid silver;
+    background:#F0F0F0;
+    overflow:auto;
+    text-align:left;
+    clear:both;
+  }
+  span.type {
+    color:#00428c;
+  }
+@media print {
+   span.type {
+    color:#00428c;
+    font-size: 150%;
+    font-weight: bold;
+  }
+}
+  span.console_1 {
+    color: gray;
+  }
+  span.console_2 {
+    color: #00428c;
+  }
+  span.console_3 {
+    color: black;
+  }
+  </style>
+</head>
+<body>
+
+<div class="background">
+  <img id="head-logo" alt="OpenJDK Logo" src="images/SAPJVM_small.png" />
+  <img id="head-icon" alt="SAP Logo" src="images/OpenJDK_transparent_margin.png" />
+</div>
+
+
+<div class="slide cover title">
+ <img src="images/OpenHeart.png"
+      class="cover" />
+ <br clear="all" />
+ <h1 style="font-size: 300%; padding: 0;">Open Heart Surgery:<br/><br/>Analyzing and Debugging the<br/>HotSpot VM at the OS Level</h1>
+ <p  style="font-size: 120%; margin: 1em 0;">
+   <a href="http://weblogs.java.net/blog/simonis/">Volker Simonis, SAP</a>
+ </p>
+</div>
+
+<!--
+<div class="slide">
+<h1>Java - Terms and Definitions</h1>
+
+<p>
+A Java Runtime Environment (JRE) consists of:
+<ul>
+<li>A Java Virtual Machine (VM) which executes Java Bytecodes</li>
+<li>A set of standard Java libraries - the Java SE API (mostly implemented in Java)</li>
+</ul>
+</p>
+
+<p>
+A Java Development Kit (JDK) consists of:
+<ul>
+<li>A Java Runtime Environment</li>
+<li>A set of standard Java tools like <span class="code">javac</span>, <span class="code">javap</span>, <span class="code">jdb</span>, ..</li>
+</ul>
+</p>
+
+<p>
+As of today, there exist numerous Java VM implementations:
+<ul>
+<li>Free implementations:
+    <a href="http://openjdk.java.net/groups/hotspot/">HotSpot</a>,
+    <a href="http://harmony.apache.org/">Harmony</a>,
+    <a href="http://jikesrvm.org/">Jikes RVM</a>,
+    <a href="http://jamvm.sourceforge.net/">JamVM</a>,
+    <a href="http://www.cacaojvm.org/">CACAO</a>, ..</li>
+<li>Proprietary implementations:
+    <a href="http://www.ibm.com/developerworks/java/jdk/linux/download.html">J9</a>,
+    <a href="http://www.oracle.com/technology/products/jrockit/index.html">JRockit</a>,
+    <a href="http://help.sap.com/saphelp_nwpi71/helpdata/en/47/dc90b4ef17452289f9128b8c2bbd77/content.htm">SAP JVM</a>,
+    <a href="http://en.wikipedia.org/wiki/Azul_Systems">Azul Zing JVM</a>,
+    <a href="http://www.aicas.com/jamaica.html">JamaicaVM</a>, ..</li>
+<li>For a complete list see the "<a href="http://en.wikipedia.org/wiki/List_of_Java_virtual_machines">
+    List of Java virtual machines</a>" at Wikipedia</li>
+</ul>
+</p>
+
+<p>
+This talk is about the internals of the OpenJDK Java VM (aka HotSpot)
+<ul>
+<li>The concepts presented here apply to most of the current VMs</li>
+<li>The concrete examples are all based on the OpenJDK HotSpot VM</li>
+</ul>
+</p>
+
+</div>
+-->
+
+<div class="slide">
+<h1>Building a debug version of the JDK</h1>
+
+<p>
+The HotSpot VM is the VM in Oracle's commercial <a href="http://java.sun.com">Java SE product</a> and in the OpenJDK.
+<ul>
+<li>Unfortunately Oracle doesn't provide debug versions anymore
+  (that were "only" <em>fastdebug</em> versions anyway :)</li>
+<li>But you can <a href="http://weblogs.java.net/blog/simonis/archive/2008/01/hotspot_develop.html">
+    easily build it yourself</a> (even <a href="http://weblogs.java.net/blog/simonis/archive/2011/10/28/yaojowbi-yet-another-openjdk-windows-build-instruction">on Windows</a> :)<br/><br/>
+
+<div style="position: relative;">
+
+  <div class="non-incremental" style="position: static;">
+    <pre style="margin-top: 0; line-height:150%; color: gray">
+<span class="console_1">&gt; hg clone http://hg.openjdk.java.net/jdk9/dev jdk9-dev</span>
+<span class="console_1">&gt; cd jdk9-dev</span>
+<span class="console_1">&gt; bash get_source.sh</span>
+<span class="console_1">&gt; mkdir ../output-jdk9-dev-dbg && cd ../output-jdk9-dev-dbg</span>
+<span class="console_1">&gt; bash ../jdk9-dev/configure --disable-zip-debug-info --with-debug-level=slowdebug</span>
+<span class="console_1">...</span>
+<span class="console_1">&gt; make images LOG=debug</span>
+<span class="console_1">...</span>
+<span class="console_1">Start 2014-09-24 20:24:53</span>
+<span class="console_1">End   2014-09-24 20:32:54</span>
+<span class="console_1">00:08:01 TOTAL</span>
+<span class="console_1">&gt; ./images/j2sdk-image/bin/java -version</span>
+<span class="console_1">openjdk version "1.9.0-internal-debug"</span>
+<span class="console_1">OpenJDK Runtime Environment (build 1.9.0-internal-debug-simonis_2014_09_23_16_54-b00)</span>
+<span class="console_1">OpenJDK 64-Bit Server VM (build 1.9.0-internal-debug-simonis_2014_09_23_16_54-b00, mixed mode)</span></pre>
+  </div>
+
+  <div class="incremental" style="position: absolute; left: 0; top: 0; width: 100%">
+    <pre style="margin-top: 0; line-height:150%; color: gray">
+<span class="console_2">&gt; hg clone http://hg.openjdk.java.net/jdk9/dev jdk9-dev</span>
+<span class="console_1">&gt; cd jdk9-dev</span>
+<span class="console_1">&gt; bash get_source.sh</span>
+<span class="console_1">&gt; mkdir ../output-jdk9-dev-dbg && cd ../output-jdk9-dev-dbg</span>
+<span class="console_1">&gt; bash ../jdk9-dev/configure --disable-zip-debug-info --with-debug-level=slowdebug</span>
+<span class="console_1">...</span>
+<span class="console_1">&gt; make images LOG=debug</span>
+<span class="console_1">...</span>
+<span class="console_1">Start 2014-09-24 20:24:53</span>
+<span class="console_1">End   2014-09-24 20:32:54</span>
+<span class="console_1">00:08:01 TOTAL</span>
+<span class="console_1">&gt; ./images/j2sdk-image/bin/java -version</span>
+<span class="console_1">openjdk version "1.9.0-internal-debug"</span>
+<span class="console_1">OpenJDK Runtime Environment (build 1.9.0-internal-debug-simonis_2014_09_23_16_54-b00)</span>
+<span class="console_1">OpenJDK 64-Bit Server VM (build 1.9.0-internal-debug-simonis_2014_09_23_16_54-b00, mixed mode)</span></pre>
+  </div>
+
+  <div class="incremental" style="position: absolute; left: 0; top: 0; width: 100%">
+    <pre style="margin-top: 0; line-height:150%; color: gray">
+<span class="console_2">&gt; hg clone http://hg.openjdk.java.net/jdk9/dev jdk9-dev</span>
+<span class="console_2">&gt; cd jdk9-dev</span>
+<span class="console_1">&gt; bash get_source.sh</span>
+<span class="console_1">&gt; mkdir ../output-jdk9-dev-dbg && cd ../output-jdk9-dev-dbg</span>
+<span class="console_1">&gt; bash ../jdk9-dev/configure --disable-zip-debug-info --with-debug-level=slowdebug</span>
+<span class="console_1">...</span>
+<span class="console_1">&gt; make images LOG=debug</span>
+<span class="console_1">...</span>
+<span class="console_1">Start 2014-09-24 20:24:53</span>
+<span class="console_1">End   2014-09-24 20:32:54</span>
+<span class="console_1">00:08:01 TOTAL</span>
+<span class="console_1">&gt; ./images/j2sdk-image/bin/java -version</span>
+<span class="console_1">openjdk version "1.9.0-internal-debug"</span>
+<span class="console_1">OpenJDK Runtime Environment (build 1.9.0-internal-debug-simonis_2014_09_23_16_54-b00)</span>
+<span class="console_1">OpenJDK 64-Bit Server VM (build 1.9.0-internal-debug-simonis_2014_09_23_16_54-b00, mixed mode)</span></pre>
+  </div>
+
+  <div class="incremental" style="position: absolute; left: 0; top: 0; width: 100%">
+    <pre style="margin-top: 0; line-height:150%; color: gray">
+<span class="console_2">&gt; hg clone http://hg.openjdk.java.net/jdk9/dev jdk9-dev</span>
+<span class="console_2">&gt; cd jdk9-dev</span>
+<span class="console_2">&gt; bash get_source.sh</span>
+<span class="console_1">&gt; mkdir ../output-jdk9-dev-dbg && cd ../output-jdk9-dev-dbg</span>
+<span class="console_1">&gt; bash ../jdk9-dev/configure --disable-zip-debug-info --with-debug-level=slowdebug</span>
+<span class="console_1">...</span>
+<span class="console_1">&gt; make images LOG=debug</span>
+<span class="console_1">...</span>
+<span class="console_1">Start 2014-09-24 20:24:53</span>
+<span class="console_1">End   2014-09-24 20:32:54</span>
+<span class="console_1">00:08:01 TOTAL</span>
+<span class="console_1">&gt; ./images/j2sdk-image/bin/java -version</span>
+<span class="console_1">openjdk version "1.9.0-internal-debug"</span>
+<span class="console_1">OpenJDK Runtime Environment (build 1.9.0-internal-debug-simonis_2014_09_23_16_54-b00)</span>
+<span class="console_1">OpenJDK 64-Bit Server VM (build 1.9.0-internal-debug-simonis_2014_09_23_16_54-b00, mixed mode)</span></pre>
+  </div>
+
+  <div class="incremental" style="position: absolute; left: 0; top: 0; width: 100%">
+    <pre style="margin-top: 0; line-height:150%; color: gray">
+<span class="console_2">&gt; hg clone http://hg.openjdk.java.net/jdk9/dev jdk9-dev</span>
+<span class="console_2">&gt; cd jdk9-dev</span>
+<span class="console_2">&gt; bash get_source.sh</span>
+<span class="console_2">&gt; mkdir ../output-jdk9-dev-dbg && cd ../output-jdk9-dev-dbg</span>
+<span class="console_1">&gt; bash ../jdk9-dev/configure --disable-zip-debug-info --with-debug-level=slowdebug</span>
+<span class="console_1">...</span>
+<span class="console_1">&gt; make images LOG=debug</span>
+<span class="console_1">...</span>
+<span class="console_1">Start 2014-09-24 20:24:53</span>
+<span class="console_1">End   2014-09-24 20:32:54</span>
+<span class="console_1">00:08:01 TOTAL</span>
+<span class="console_1">&gt; ./images/j2sdk-image/bin/java -version</span>
+<span class="console_1">openjdk version "1.9.0-internal-debug"</span>
+<span class="console_1">OpenJDK Runtime Environment (build 1.9.0-internal-debug-simonis_2014_09_23_16_54-b00)</span>
+<span class="console_1">OpenJDK 64-Bit Server VM (build 1.9.0-internal-debug-simonis_2014_09_23_16_54-b00, mixed mode)</span></pre>
+  </div>
+
+  <div class="incremental" style="position: absolute; left: 0; top: 0; width: 100%">
+    <pre style="margin-top: 0; line-height:150%; color: gray">
+<span class="console_2">&gt; hg clone http://hg.openjdk.java.net/jdk9/dev jdk9-dev</span>
+<span class="console_2">&gt; cd jdk9-dev</span>
+<span class="console_2">&gt; bash get_source.sh</span>
+<span class="console_2">&gt; mkdir ../output-jdk9-dev-dbg && cd ../output-jdk9-dev-dbg</span>
+<span class="console_2">&gt; bash ../jdk9-dev/configure --disable-zip-debug-info --with-debug-level=slowdebug</span>
+<span class="console_3">...</span>
+<span class="console_1">&gt; make images LOG=debug</span>
+<span class="console_1">...</span>
+<span class="console_1">Start 2014-09-24 20:24:53</span>
+<span class="console_1">End   2014-09-24 20:32:54</span>
+<span class="console_1">00:08:01 TOTAL</span>
+<span class="console_1">&gt; ./images/j2sdk-image/bin/java -version</span>
+<span class="console_1">openjdk version "1.9.0-internal-debug"</span>
+<span class="console_1">OpenJDK Runtime Environment (build 1.9.0-internal-debug-simonis_2014_09_23_16_54-b00)</span>
+<span class="console_1">OpenJDK 64-Bit Server VM (build 1.9.0-internal-debug-simonis_2014_09_23_16_54-b00, mixed mode)</span></pre>
+  </div>
+
+  <div class="incremental" style="position: absolute; left: 0; top: 0; width: 100%">
+    <pre style="margin-top: 0; line-height:150%; color: gray">
+<span class="console_2">&gt; hg clone http://hg.openjdk.java.net/jdk9/dev jdk9-dev</span>
+<span class="console_2">&gt; cd jdk9-dev</span>
+<span class="console_2">&gt; bash get_source.sh</span>
+<span class="console_2">&gt; mkdir ../output-jdk9-dev-dbg && cd ../output-jdk9-dev-dbg</span>
+<span class="console_2">&gt; bash ../jdk9-dev/configure --disable-zip-debug-info --with-debug-level=slowdebug</span>
+<span class="console_3">...</span>
+<span class="console_2">&gt; make images LOG=debug</span>
+<span class="console_3">...</span>
+<span class="console_3">Start 2014-09-24 20:24:53</span>
+<span class="console_3">End   2014-09-24 20:32:54</span>
+<span class="console_3">00:08:01 TOTAL</span>
+<span class="console_1">&gt; ./images/j2sdk-image/bin/java -version</span>
+<span class="console_1">openjdk version "1.9.0-internal-debug"</span>
+<span class="console_1">OpenJDK Runtime Environment (build 1.9.0-internal-debug-simonis_2014_09_23_16_54-b00)</span>
+<span class="console_1">OpenJDK 64-Bit Server VM (build 1.9.0-internal-debug-simonis_2014_09_23_16_54-b00, mixed mode)</span></pre>
+  </div>
+
+  <div class="incremental" style="position: absolute; left: 0; top: 0; width: 100%">
+    <pre style="margin-top: 0; line-height:150%; color: gray">
+<span class="console_2">&gt; hg clone http://hg.openjdk.java.net/jdk9/dev jdk9-dev</span>
+<span class="console_2">&gt; cd jdk9-dev</span>
+<span class="console_2">&gt; bash get_source.sh</span>
+<span class="console_2">&gt; mkdir ../output-jdk9-dev-dbg && cd ../output-jdk9-dev-dbg</span>
+<span class="console_2">&gt; bash ../jdk9-dev/configure --disable-zip-debug-info --with-debug-level=slowdebug</span>
+<span class="console_3">...</span>
+<span class="console_2">&gt; make images LOG=debug</span>
+<span class="console_3">...</span>
+<span class="console_3">Start 2014-09-24 20:24:53</span>
+<span class="console_3">End   2014-09-24 20:32:54</span>
+<span class="console_3">00:08:01 TOTAL</span>
+<span class="console_2">&gt; ./images/j2sdk-image/bin/java -version</span>
+<span class="console_3">openjdk version "1.9.0-internal-debug"</span>
+<span class="console_3">OpenJDK Runtime Environment (build 1.9.0-internal-debug-simonis_2014_09_23_16_54-b00)</span>
+<span class="console_3">OpenJDK 64-Bit Server VM (build 1.9.0-internal-debug-simonis_2014_09_23_16_54-b00, mixed mode)</span></pre>
+  </div>
+
+</div>
+
+</li>
+</ul>
+</p>
+
+<p>
+<ul>
+<li>The debug-versions knows much more options, traces, and debug output. Use:<br/>
+  <span style="color:blue" class="code">-XX:+UnlockExperimentalVMOptions -Xprintflags</span> or
+  <span style="color:blue" class="code">-XX:+PrintFlagsWithComments</span> to see them.</li>
+<li>Use
+  <span style="color:blue" class="code">-XX:+PrintFlagsInitial</span> and
+  <span style="color:blue" class="code">-XX:+PrintFlagsFinal</span> to see the actual settings</li>
+</ul>
+</p>
+
+</div>
+
+
+
+<div class="slide">
+<h1>Get the party started</h1>
+
+<div style="width: 100%">
+  <div style="float: left; width: 37%">
+    <pre style="line-height:120%; color: black; border-width: thin;">
+public class HelloWorld {
+  public static void main(String args[]) {
+    System.out.println("Hello World");
+  }
+}
+
+
+
+<span style="color: #00428c;">&gt; javac HelloWorld.java</span>
+
+<span style="color: #00428c;">&gt; javap -c HelloWorld</span>
+</pre>
+  </div>
+  <div style="float: right; width: 63%">
+    <pre style="line-height:120%; color: black; border-width: thin;">
+public HelloWorld();
+  Code:
+   0:   aload_0
+   1:   invokespecial #1; //Method java/lang/Object."&lt;init&gt;":()V
+   4:   return
+public static void main(java.lang.String[]);
+  Code:
+   0:   getstatic     #2; //Field java/lang/System.out:Ljava/io/PrintStream;
+   3:   ldc           #3; //String Hello World
+   5:   invokevirtual #4; //Method java/io/PrintStream.println:(Ljava/lang/String;)V
+   8:   return</pre>
+  </div>
+</div>
+
+<p>
+Let's count the bytecodes the VM executes:
+
+<div style="position: relative; width: 37%;">
+
+  <div class="non-incremental" style="position: static;">
+    <pre style="margin-top: 0; line-height:120%; color: gray; border-width: thin;">
+&gt; java -XX:+CountBytecodes HelloWorld
+Hello World
+3128086 bytecodes executed in 1,0s (3,163MHz)
+[BytecodeCounter::counter_value = 3128086]
+</pre>
+  </div>
+
+  <div class="incremental" style="position: absolute; left: 0; top: 0; width: 100%">
+    <pre style="margin-top: 0; line-height:120%; border-width: thin;">
+&gt; java <span style="color:blue">-XX:+CountBytecodes</span> HelloWorld
+<span style="color:black">Hello World
+3128086 bytecodes executed in 1,0s (3,163MHz)
+[BytecodeCounter::counter_value = 3128086]
+</pre>
+  </div>
+
+</div>
+</p>
+
+<p>
+Let's see which bytecodes the VM executes:
+
+<div style="position: relative; width: 100%">
+  <div style="float: left; width: 37%">
+
+    <div style="position: relative;">
+
+      <div style="position: static;">
+        <pre style="margin-top: 0; line-height:120%; color: gray; border-width: thin;">
+&gt; java -XX:+PrintBytecodeHistogram HelloWorld
+Hello World
+Histogram of 3127972 executed bytecodes:
+
+  absolute  relative  code    name
+------------------------------------------
+    179266     5,73%    db    fast_aload_0
+    158712     5,07%    1b    iload_1
+    150836     4,82%    df    fast_iload
+    143223     4,58%    84    iinc
+...</pre>
+      </div>
+
+      <div class="incremental" style="position: absolute; left: 0; top: 0; width: 100%">
+        <pre style="margin-top: 0; line-height:120%; border-width: thin;">
+&gt; java <span style="color:blue">-XX:+PrintBytecodeHistogram</span> HelloWorld
+<span style="color:black">Hello World
+Histogram of 3127972 executed bytecodes:
+
+  absolute  relative  code    name
+------------------------------------------
+    179266     5,73%    db    fast_aload_0
+    158712     5,07%    1b    iload_1
+    150836     4,82%    df    fast_iload
+    143223     4,58%    84    iinc
+...</span></pre>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div style="float: right; width: 63%">
+
+    <div style="position: relative;">
+
+      <div style="position: static;">
+        <pre style="margin-top: 0; line-height:120%; color: gray; border-width: thin;">
+&gt; java -XX:+TraceBytecodes HelloWorld
+
+[11931] static void java.lang.Object.&lt;clinit&gt;()
+[11931]        1     0  invokestatic 72 &lt;java/lang/Object.registerNatives()V&gt;
+[11931]        2     3  return
+
+[11931] static void java.lang.String.&lt;clinit&gt;()
+[11931]        3     0  iconst_0
+[11931]        4     1  anewarray java/io/ObjectStreamField
+[11931]        5     4  putstatic 425 &lt;java/lang/String.serialPersistentFields/[Ljava/io/ObjectStreamField;&gt;
+...</pre>
+      </div>
+
+      <div class="incremental" style="position: absolute; left: 0; top: 0; width: 100%">
+        <pre style="margin-top: 0; line-height:120%; border-width: thin;">
+&gt; java <span style="color:blue">-XX:+TraceBytecodes</span> HelloWorld
+<span style="color:black">
+[11931] static void java.lang.Object.&lt;clinit&gt;()
+[11931]        1     0  invokestatic 72 &lt;java/lang/Object.registerNatives()V&gt;
+[11931]        2     3  return
+
+[11931] static void java.lang.String.&lt;clinit&gt;()
+[11931]        3     0  iconst_0
+[11931]        4     1  anewarray java/io/ObjectStreamField
+[11931]        5     4  putstatic 425 &lt;java/lang/String.serialPersistentFields/[Ljava/io/ObjectStreamField;&gt;
+...</span></pre>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+</p>
+
+</div>
+
+
+<div class="slide">
+<h1>Bytecode to Assembler - TemplateInterpreter</h1>
+
+<p>
+The HotSpot comes with two interpreters - the Template and the CPP Interpreter
+<ul>
+  <li>The Template interpreter is the default and the only officially supported interpreter</li>
+  <li>The Template interpreter is much faster than the CPP interpreter
+    (see <a href="http://weblogs.java.net/blog/simonis/archive/2007/11/template_vs_cin.html">
+    Template- vs. C++-Interpreter shootout</a>)</li>
+  <li>The Template interpreter is generated at VM startup
+    <ul>
+      <li>The VM creates an assembler "template" for each bytecode</li>
+      <li>This can be traced with the <span style="color:blue">-XX:+PrintInterpreter</span> option</li>
+      <li>Printing the assembly generated by the HotSpot requires the
+	<a href="https://wikis.oracle.com/display/HotSpotInternals/PrintAssembly">disassembler plugin</a></li>
+    </ul>
+  </li>
+</ul>
+<div style="position: relative; margin: 0 0 0 4ex;">
+  <div class="non-incremental" style="position: static; left: 0; top: 0">
+    <object data="images/adjusted/TemplateInterpreter_1.svg" type="image/svg+xml"
+            height="50%" style="margin: 0">&nbsp;</object>
+  </div>
+  <div class="incremental" style="position: absolute; left: 0; top: 0">
+    <object data="images/adjusted/TemplateInterpreter_2.svg" type="image/svg+xml"
+            height="50%" style="margin: 0">&nbsp;</object>
+  </div>
+  <div class="incremental" style="position: absolute; left: 0; top: 0">
+    <object data="images/adjusted/TemplateInterpreter_3.svg" type="image/svg+xml"
+            height="50%" style="margin: 0">&nbsp;</object>
+  </div>
+  <div class="incremental" style="position: absolute; left: 0; top: 0">
+    <object data="images/adjusted/TemplateInterpreter_4.svg" type="image/svg+xml"
+            height="50%" style="margin: 0">&nbsp;</object>
+  </div>
+  <div class="incremental" style="position: absolute; left: 0; top: 0">
+    <object data="images/adjusted/TemplateInterpreter_5.svg" type="image/svg+xml"
+            height="50%" style="margin: 0">&nbsp;</object>
+  </div>
+  <div class="incremental" style="position: absolute; left: 0; top: 0">
+    <object data="images/adjusted/TemplateInterpreter_6.svg" type="image/svg+xml"
+            height="50%" style="margin: 0">&nbsp;</object>
+  </div>
+  <div class="incremental" style="position: absolute; left: 0; top: 0">
+    <object data="images/adjusted/TemplateInterpreter_7.svg" type="image/svg+xml"
+            height="50%" style="margin: 0">&nbsp;</object>
+  </div>
+  <div class="incremental" style="position: absolute; left: 0; top: 0">
+    <object data="images/adjusted/TemplateInterpreter_8.svg" type="image/svg+xml"
+            height="50%" style="margin: 0">&nbsp;</object>
+  </div>
+  <div class="incremental" style="position: absolute; left: 0; top: 0">
+    <object data="images/adjusted/TemplateInterpreter_9.svg" type="image/svg+xml"
+            height="50%" style="margin: 0">&nbsp;</object>
+  </div>
+  <div class="incremental" style="position: absolute; left: 0; top: 0">
+    <object data="images/adjusted/TemplateInterpreter_10.svg" type="image/svg+xml"
+            height="50%" style="margin: 0">&nbsp;</object>
+  </div>
+  <div class="incremental" style="position: absolute; left: 0; top: 0">
+    <object data="images/adjusted/TemplateInterpreter_11.svg" type="image/svg+xml"
+            height="50%" style="margin: 0">&nbsp;</object>
+  </div>
+  <div class="incremental" style="position: absolute; left: 0; top: 0">
+    <object data="images/adjusted/TemplateInterpreter_1.svg" type="image/svg+xml"
+            height="50%" style="margin: 0">&nbsp;</object>
+  </div>
+</div>
+</p>
+
+</div>
+
+
+<div class="slide">
+<h1>TemplateInterpreter - Demo</h1>
+
+<p>Just have a look at the template interpreter. To see the actual
+disassembly, we need the <code>hsdis</code> disassembler library in
+the library path (it can be easily built from the sources in
+(<code>hotspot/src/share/tools/hsdis</code>) and
+the <a href="http://www.gnu.org/software/binutils/">GNU
+binutils</a>).</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+$ <span class="type">export LD_LIBRARY_PATH=/share/OpenJDK/hsdis</span>
+$ <span class="type">java -XX:+PrintInterpreter HelloWorld | less</span>
+----------------------------------------------------------------------
+Interpreter
+
+code size        =    210K bytes
+total space      =   1023K bytes
+wasted space     =    813K bytes
+
+# of codelets    =    262
+avg codelet size =    824 bytes
+...
+----------------------------------------------------------------------
+iadd  96 iadd  [0x00007f07e5024aa0, 0x00007f07e5024ae0]  64 bytes
+
+  0x00007f07e5024aa0: mov    (%rsp),%eax
+  0x00007f07e5024aa3: add    $0x8,%rsp
+  0x00007f07e5024aa7: mov    (%rsp),%edx
+  0x00007f07e5024aaa: add    $0x8,%rsp
+  0x00007f07e5024aae: add    %edx,%eax
+  0x00007f07e5024ab0: movzbl 0x1(%r13),%ebx
+  0x00007f07e5024ab5: inc    %r13
+  0x00007f07e5024ab8: movabs $0x7f07ef8c1540,%r10
+  0x00007f07e5024ac2: jmpq   *(%r10,%rbx,8)
+  0x00007f07e5024ac6: nop
+
+$ <span class="type">java -XX:+TraceBytecodes HelloWorld | less</span>
+...
+[31717] virtual void java.lang.ThreadGroup.add(jobject)
+...
+[31717]      115    84  iconst_1
+[31717]      116    85  iadd
+...
+</pre>
+
+<p>Remember that the first occurence of <code>iadd</code> is at bytecdoe 116 in
+  the function <code>java.lang.ThreadGroup.add</code>.</p>
+
+<p>Now grab the address of the <tt>iadd</tt> codelet:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+<span class="type">gdb java</span>
+(gdb) <span class="type">run -XX:+PrintInterpreter HelloWorld | grep iadd</span>
+Starting program: /share/OpenJDK/jdk1.7.0_hsx/bin/java -XX:+PrintInterpreter HelloWorld | grep iadd
+iadd  96 iadd  [0x00007fffeedeb400, 0x00007fffeedeb440]  64 bytes
+During startup program exited normally.
+</pre>
+
+<p>Now stop after the Template Interpreter was generated and set a breakpoint in the <tt>iadd</tt> codelet</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">b init_globals()</span>
+(gdb) <span class="type">run HelloWorld</span>
+...
+Breakpoint 1, init_globals () at /share/OpenJDK/hsx/hotspot/src/share/vm/runtime/init.cpp:92
+(gdb) <span class="type">fin</span>
+Run till exit from #0  init_globals () at /share/OpenJDK/hsx/hotspot/src/share/vm/runtime/init.cpp:92
+...
+(gdb) <span class="type">b *0x00007fffeedeb400</span>
+(gdb) <span class="type">c</span>
+</pre>
+
+<p>Verify that this is the same assembler code like in the -XX:+PrintInterpreter example</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+Breakpoint 2, 0x00007fffeedeb400 in ?? ()
+(gdb) <span class="type">x /12i $pc</span>
+=> 0x7fffeedeb400:	mov    (%rsp),%eax
+   0x7fffeedeb403:	add    $0x8,%rsp
+   0x7fffeedeb407:	mov    (%rsp),%edx
+   0x7fffeedeb40a:	add    $0x8,%rsp
+   0x7fffeedeb40e:	add    %edx,%eax
+   0x7fffeedeb410:	movzbl 0x1(%r13),%ebx
+   0x7fffeedeb415:	inc    %r13
+   0x7fffeedeb418:	movabs $0x7ffff73fb8e0,%r10
+   0x7fffeedeb422:	jmpq   *(%r10,%rbx,8)
+   0x7fffeedeb426:	nop
+   0x7fffeedeb427:	nop
+   0x7fffeedeb428:	int3
+</pre>
+
+<p>But notice that <tt>gdb</tt> has no clue of where we are</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">where</span>
+#0  0x00007fffeedeb400 in ?? ()
+#1  0x0000000000000000 in ?? ()
+</pre>
+
+<p>Fortunately, the HotSpot provides some helper functions in the debug build which can be very usefull here:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">call help()</span>
+"Executing help"
+basic
+  pp(void* p)   - try to make sense of p
+  pv(intptr_t p)- ((PrintableResourceObj*) p)->print()
+  ps()          - print current thread stack
+  pss()         - print all thread stacks
+  pm(int pc)    - print Method* given compiled PC
+  findm(intptr_t pc) - finds Method*
+  find(intptr_t x)   - finds & prints nmethod/stub/bytecode/oop based on pointer into it
+  pns(void* sp, void* fp, void* pc)  - print native (i.e. mixed) stack trace. E.g.
+                   pns($sp, $rbp, $pc) on Linux/amd64 and Solaris/amd64 or
+                   pns($sp, $ebp, $pc) on Linux/x86 or
+                   pns($sp, 0, $pc)    on Linux/ppc64 or
+                   pns($sp + 0x7ff, 0, $pc) on Solaris/SPARC
+                 - in gdb do 'set overload-resolution off' before calling pns()
+                 - in dbx do 'frame 1' before calling pns()
+misc.
+  flush()       - flushes the log file
+  events()      - dump events from ring buffers
+compiler debugging
+  debug()       - to set things up for compiler debugging
+  ndebug()      - undo debug
+</pre>
+
+<p>Let's try <code>pns()</code> first, which will give us a huge, mixed Java/native stack trace:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">call pns($sp, $rbp, $pc)</span>
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+j  java.nio.HeapByteBuffer.ix(I)I+2
+j  java.nio.HeapByteBuffer.compact()Ljava/nio/ByteBuffer;+9
+j  sun.nio.cs.StreamDecoder.readBytes()I+4
+j  sun.nio.cs.StreamDecoder.implRead([CII)I+112
+j  sun.nio.cs.StreamDecoder.read([CII)I+180
+j  java.io.InputStreamReader.read([CII)I+7
+j  java.io.BufferedReader.fill()V+145
+j  java.io.BufferedReader.readLine(Z)Ljava/lang/String;+44
+j  java.io.BufferedReader.readLine()Ljava/lang/String;+2
+j  sun.misc.MetaIndex.registerDirectory(Ljava/io/File;)V+62
+j  sun.misc.Launcher$ExtClassLoader$1.run()Lsun/misc/Launcher$ExtClassLoader;+19
+j  sun.misc.Launcher$ExtClassLoader$1.run()Ljava/lang/Object;+1
+v  ~StubRoutines::call_stub
+V  [libjvm.so+0x9b763d]  JavaCalls::call_helper(JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x6d9
+V  [libjvm.so+0xca00ed]  os::os_exception_wrapper(void (*)(JavaValue*, methodHandle*, JavaCallArguments*, Thread*), JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x41
+V  [libjvm.so+0x9b6f4d]  JavaCalls::call(JavaValue*, methodHandle, JavaCallArguments*, Thread*)+0x8b
+V  [libjvm.so+0xa36ca5]  JVM_DoPrivileged+0x69d
+C  [libjava.so+0xc717]  Java_java_security_AccessController_doPrivileged__Ljava_security_PrivilegedExceptionAction_2+0x43
+j  java.security.AccessController.doPrivileged(Ljava/security/PrivilegedExceptionAction;)Ljava/lang/Object;+0
+j  sun.misc.Launcher$ExtClassLoader.getExtClassLoader()Lsun/misc/Launcher$ExtClassLoader;+12
+j  sun.misc.Launcher.<init>()V+4
+j  sun.misc.Launcher.<clinit>()V+15
+v  ~StubRoutines::call_stub
+V  [libjvm.so+0x9b763d]  JavaCalls::call_helper(JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x6d9
+V  [libjvm.so+0xca00ed]  os::os_exception_wrapper(void (*)(JavaValue*, methodHandle*, JavaCallArguments*, Thread*), JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x41
+V  [libjvm.so+0x9b6f4d]  JavaCalls::call(JavaValue*, methodHandle, JavaCallArguments*, Thread*)+0x8b
+V  [libjvm.so+0x940be4]  InstanceKlass::call_class_initializer_impl(instanceKlassHandle, Thread*)+0x22e
+V  [libjvm.so+0x940910]  InstanceKlass::call_class_initializer(Thread*)+0x5c
+V  [libjvm.so+0x93f52b]  InstanceKlass::initialize_impl(instanceKlassHandle, Thread*)+0x83d
+V  [libjvm.so+0x93dc5b]  InstanceKlass::initialize(Thread*)+0x91
+V  [libjvm.so+0xb32f9d]  LinkResolver::resolve_static_call(CallInfo&, KlassHandle&, Symbol*, Symbol*, KlassHandle, bool, bool, Thread*)+0x179
+V  [libjvm.so+0xb371d0]  LinkResolver::resolve_invokestatic(CallInfo&, constantPoolHandle, int, Thread*)+0xec
+V  [libjvm.so+0xb36e02]  LinkResolver::resolve_invoke(CallInfo&, Handle, constantPoolHandle, int, Bytecodes::Code, Thread*)+0x8c
+V  [libjvm.so+0x9a92fc]  InterpreterRuntime::resolve_invoke(JavaThread*, Bytecodes::Code)+0x438
+j  java.lang.ClassLoader.initSystemClassLoader()V+22
+j  java.lang.ClassLoader.getSystemClassLoader()Ljava/lang/ClassLoader;+0
+v  ~StubRoutines::call_stub
+V  [libjvm.so+0x9b763d]  JavaCalls::call_helper(JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x6d9
+V  [libjvm.so+0xca00ed]  os::os_exception_wrapper(void (*)(JavaValue*, methodHandle*, JavaCallArguments*, Thread*), JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x41
+V  [libjvm.so+0x9b6f4d]  JavaCalls::call(JavaValue*, methodHandle, JavaCallArguments*, Thread*)+0x8b
+V  [libjvm.so+0x9b6ba1]  JavaCalls::call_static(JavaValue*, KlassHandle, Symbol*, Symbol*, JavaCallArguments*, Thread*)+0x14b
+V  [libjvm.so+0x9b6cbd]  JavaCalls::call_static(JavaValue*, KlassHandle, Symbol*, Symbol*, Thread*)+0x9d
+V  [libjvm.so+0xdf4c38]  SystemDictionary::compute_java_system_loader(Thread*)+0x90
+V  [libjvm.so+0xe331b4]  Threads::create_vm(JavaVMInitArgs*, bool*)+0x57e
+V  [libjvm.so+0xa00096]  JNI_CreateJavaVM+0xce
+C  [libjli.so+0xa50d]  InitializeJVM+0x13b
+C  [libjli.so+0x8044]  JavaMain+0xd3
+C  [libpthread.so.0+0x8182]  start_thread+0xc2
+</pre>
+
+<p>
+You can now verify that the stack is the same like for the first occurence of <tt>iadd</tt> we see with -XX:+TraceBytecodes
+(<b>actually it isn't</b> - see below why)
+</p>
+
+<p>
+Let's first see what GDB thinks about the address we want to jump to
+at the end of our <code>iadd</code> codelet:
+</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">x /12i $pc</span>
+=> 0x7fffeedeb400:	mov    (%rsp),%eax
+   0x7fffeedeb403:	add    $0x8,%rsp
+   0x7fffeedeb407:	mov    (%rsp),%edx
+   0x7fffeedeb40a:	add    $0x8,%rsp
+   0x7fffeedeb40e:	add    %edx,%eax
+   0x7fffeedeb410:	movzbl 0x1(%r13),%ebx
+   0x7fffeedeb415:	inc    %r13
+   0x7fffeedeb418:	movabs $0x7ffff73fb8e0,%r10
+   0x7fffeedeb422:	jmpq   *(%r10,%rbx,8)
+   0x7fffeedeb426:	nop
+   0x7fffeedeb427:	nop
+   0x7fffeedeb428:	int3
+(gdb) <span class="type">info symbol(0x7ffff73fb8e0)</span>
+TemplateInterpreter::_active_table + 6144 in section .bss of /share/OpenJDK/jdk1.7.0_hsx/jre/lib/amd64/server/libjvm.so
+</pre>
+
+<p>The next codelet address is actually computed from the active Template Table!</p>
+
+<p>
+But as an optimization, the Template Interpreter maintains a Top Of
+Stack Cache (TOSCA) in a register. Some bytecodes leave their result
+in this register to avoid writing it to the stack and other bytecodes
+can potentially consume the top of stack value directly from that
+register without reading it from the stack. Therefore there's actually
+not just one <em>active</em> template dispatch table, but a an array
+of active dispatch tables, one for each type of TOSCA output state.
+</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">ptype 'TemplateInterpreter::_active_table'</span>
+type = class DispatchTable {
+  private:
+    u_char *_table[9][256];
+
+  public:
+    EntryPoint entry(int) const;
+    void set_entry(int, EntryPoint &);
+    address * table_for(TosState);
+    address * table_for(void);
+    int distance_from(address *);
+    int distance_from(TosState);
+    bool operator==(DispatchTable &);
+}
+</pre>
+
+<p>
+The template codelets have different entry points, based on the TOSCA
+state of the previous bytecode. It is therefore not enough to put a
+breakpoint only on the first instruction of a bytecode. If we want to
+stop at every occurence of a bytecode, we have to put breakpoints at
+every entry point. The <tt>iadd</tt> codelet has two entry points: one
+if the first argument is already in the TOSCA register (i.e. from
+the <code>itos</code> table and a second one if the frist argument is
+still on the stack (i.e. from the <code>vtos</code> table).
+</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">print (void*)'TemplateInterpreter::_active_table'._table[itos]['Bytecodes::_iadd']</span>
+$24 = (void *) 0x7fffeedeb407
+(gdb) <span class="type">print (void*)'TemplateInterpreter::_active_table'._table[vtos]['Bytecodes::_iadd']</span>
+$25 = (void *) 0x7fffeedeb400
+</pre>
+
+<p>
+If we set a second breakpoint at <code>0x7fffeedeb407</code> we will also stop
+in <code>java.lang.ThreadGroup.add</code>.
+</p>
+
+<p>
+With our <tt>iadd</tt> example, it happend that the very first
+occurence of an <tt>iadd</tt> bytecode (in <code>java.lang.ThreadGroup.add</code>)
+happened after a <tt>iconst_1</tt> bytecode which has a TOSCA out state of <em>itos</em> (i.e. it places
+its result right into the TOSCA register). So after the <tt>iconst_1</tt> codelet, the interpreter
+dispatches right to the second entry point of the <tt>iadd</tt> codelet bacause it only has to load
+the second paramter from the stack (and we didn't stop at our first
+breakpoint!). In contrast, in the function where we first stopped
+(i.e. <code>java.nio.HeapByteBuffer.ix</code>) the <code>iadd</code> bytecode
+was preceded by a <code>getfield</code> bytecode which returns its result on the stack.
+</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">p 'TemplateTable::_template_table'['Bytecodes::_getfield']</span>
+$25 = {_flags = 5, _tos_in = vtos, _tos_out = vtos, _gen = 0x7ffff6b98404 &lt;TemplateTable::getfield(int)&gt;, _arg = 1}
+(gdb) <span class="type">p 'TemplateTable::_template_table'['Bytecodes::_iconst_1']</span>
+$26 = {_flags = 0, _tos_in = vtos, _tos_out = itos, _gen = 0x7ffff6b8b8f8 &lt;TemplateTable::iconst(int)&gt;, _arg = 1}
+</pre>
+
+<!--- not working any more after the perm-gen removal because the methods are
+      not oops any more and live in the metaspace now.
+
+<p>And how is it computed (i.e. what is <tt>$r13</tt>)?</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">call find($r13)</span>
+"Executing find"
+0x00000000bce065fe is an oop
+{constMethod}
+ - klass: {other class}
+ - method:       0x00000000bce06608 {method} 'charAt' '(I)C' in 'java/lang/String'
+ - exceptions:   0x00000000bce01c10
+bci_from(0xbce065fe) = 30; print_codes():
+0 iload_1
+1 iflt 12
+4 iload_1
+5 aload_0
+6 fast_igetfield 395 <java/lang/String.count/I>
+9 if_icmplt 21
+12 new 234 <java/lang/StringIndexOutOfBoundsException>
+15 dup
+16 iload_1
+17 invokespecial 476 <java/lang/StringIndexOutOfBoundsException.<init>(I)V>
+20 athrow
+21 aload_0
+22 fast_agetfield 398 <java/lang/String.value/[C>
+25 iload_1
+26 aload_0
+27 fast_igetfield 397 <java/lang/String.offset/I>
+30 iadd
+31 caload
+32 ireturn
+
+(gdb) <span class="type">x /2b $r13</span>
+0xbce065fe:	0x60	0x34
+</pre>
+
+<p><b>Unfortunately, <code>call find($r13)</code> won't return the method anymore after the PermGen removal</b>. It only recognizes that <code>$r13</code> now points into the MetaSpace</code>.</p>
+
+-->
+
+<p>Notice that the <tt>$r13</tt> register is the current Bytecode Pointer (BCP). It points to <tt>0x60</tt> which is the bytecode for <tt>iadd</tt>.
+The next byte is <tt>0x34</tt> which is the bytecode for <tt>caload</tt>.</p>
+
+<p>We can now easily compute the address of the next codelet manually and verify that's the right one (the one for <tt>caload</tt>)</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">p ((void**)0x7ffff73fb8e0)[0x34]</span>
+$6 = (void *) 0x7fffeede9cc7
+(gdb) <span class="type">call find(0x7fffeede9cc7)</span>
+"Executing find"
+0x00007fffeede9cc7 is an Interpreter codelet
+caload  52 caload  [0x00007fffeede9cc0, 0x00007fffeede9d00]  64 bytes
+</pre>
+
+<p>
+There are other/better ways to stop at a specific bytecode: <tt>-XX:StopInterpreterAt=116</tt>
+</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">b breakpoint</span>
+(gdb) <span class="type">run -XX:StopInterpreterAt=116 HelloWorld</span>
+(gdb) <span class="type">where</span>
+#0  breakpoint () at /share/OpenJDK/hsx/hotspot/src/os/linux/vm/os_linux.cpp:518
+#1  0x00007ffff6a4a147 in os::breakpoint () at /share/OpenJDK/hsx/hotspot/src/os/linux/vm/os_linux.cpp:513
+#2  0x00007fffeedebf02 in ?? ()
+#3  0x000000000000001f in ?? ()
+#4  0x00000000eb564790 in ?? ()
+#5  0x00007ffff7fe33c8 in ?? ()
+...
+(gdb) <span class="type">call pns($sp, $rbp, $pc)</span>
+
+"Executing pns"
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+j  java.lang.ThreadGroup.add(Ljava/lang/ThreadGroup;)V+74
+j  java.lang.ThreadGroup.&lt;init&gt;(Ljava/lang/Void;Ljava/lang/ThreadGroup;Ljava/lang/String;)V+45
+j  java.lang.ThreadGroup.&lt;init&gt;(Ljava/lang/ThreadGroup;Ljava/lang/String;)V+7
+v  ~StubRoutines::call_stub
+V  [libjvm.so+0x9bb531]  JavaCalls::call_helper(JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x6d9
+V  [libjvm.so+0xca4a07]  os::os_exception_wrapper(void (*)(JavaValue*, methodHandle*, JavaCallArguments*, Thread*), JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x41
+V  [libjvm.so+0x9bae41]  JavaCalls::call(JavaValue*, methodHandle, JavaCallArguments*, Thread*)+0x8b
+V  [libjvm.so+0x9ba5dc]  JavaCalls::call_special(JavaValue*, KlassHandle, Symbol*, Symbol*, JavaCallArguments*, Thread*)+0x15c
+V  [libjvm.so+0x9ba922]  JavaCalls::call_special(JavaValue*, Handle, KlassHandle, Symbol*, Symbol*, Handle, Handle, Thread*)+0xf6
+V  [libjvm.so+0xe2fd1d]  create_initial_thread_group(Thread*)+0x266
+V  [libjvm.so+0xe3766c]  Threads::initialize_java_lang_classes(JavaThread*, Thread*)+0x102
+V  [libjvm.so+0xe37f4a]  Threads::create_vm(JavaVMInitArgs*, bool*)+0x512
+V  [libjvm.so+0xa04007]  JNI_CreateJavaVM+0xce
+C  [libjli.so+0xa50d]  InitializeJVM+0x13b
+C  [libjli.so+0x8044]  JavaMain+0xd3
+C  [libpthread.so.0+0x8182]  start_thread+0xc2
+
+(gdb) <span class="type">up</span>
+(gdb) <span class="type">up</span>
+(gdb) <span class="type">call find($pc)</span>
+"Executing find"
+0x00007fffeedebf02 is an Interpreter codelet
+iadd  96 iadd  [0x00007fffeedebee0, 0x00007fffeedebf40]  96 bytes
+
+(gdb) <span class="type">x /16i 0x00007fffeedebee0</span>
+   0x7fffeedebee0:	mov    (%rsp),%eax
+   0x7fffeedebee3:	add    $0x8,%rsp
+   0x7fffeedebee7:	incl   0x85a9713(%rip)        # 0x7ffff7395600 &lt;_ZN15BytecodeCounter14_counter_valueE&gt;
+   0x7fffeedebeed:	cmpl   $0xae,0x85a9709(%rip)        # 0x7ffff7395600 &lt;_ZN15BytecodeCounter14_counter_valueE&gt;
+   0x7fffeedebef7:	jne    0x7fffeedebf02
+   0x7fffeedebefd:	callq  0x7ffff6a4a13e &lt;_ZN2os10breakpointEv&gt;
+=&gt; 0x7fffeedebf02:	mov    (%rsp),%edx
+   0x7fffeedebf05:	add    $0x8,%rsp
+   0x7fffeedebf09:	add    %edx,%eax
+   0x7fffeedebf0b:	movzbl 0x1(%r13),%ebx
+   0x7fffeedebf10:	inc    %r13
+   0x7fffeedebf13:	movabs $0x7ffff73fb8e0,%r10
+   0x7fffeedebf1d:	jmpq   *(%r10,%rbx,8)
+   0x7fffeedebf21:	nop
+   0x7fffeedebf22:	nop
+   0x7fffeedebf23:	nop
+(gdb) <span class="type">info symbol 0x7ffff7395600</span>
+BytecodeCounter::_counter_value in section .bss of /share/OpenJDK/jdk1.7.0_hsx/jre/lib/amd64/server/libjvm.so
+</pre>
+
+<p>But as you can see, the <tt>iadd</tt> interpreter codelet looks different now,
+because the interpreter had to generate extra code for the -XX:StopInterpreterAt feature.</p>
+
+</div>
+
+
+<div class="slide">
+<h1>Bytecode to Assembler - JIT Compiler</h1>
+
+<p>
+The HotSpot comes with two interpreters - the C1 client and the C2 server compiler
+<ul>
+  <li>C1 is optimised for compilation speed while C2 is optimised for maximal performance of the generated code </li>
+  <li>In the past, the VM could only use one JIT compiler (<em>client</em> vs. <em>server</em> VM) </li>
+  <li>Nowadays, the VM can used both compilers with <span style="color:blue">-XX:+TieredCompilation</span></li>
+</ul>
+</p>
+<br/>
+<p>
+The C2 server compiler is a high-end fully optimising compiler:
+<ul>
+  <li>Null  and range check elimination, implicit null checks</li>
+  <li>Sophisticated deep inlining based on profiling
+    (use <span style="color:blue">-XX:+PrintInlining</span> to see it)</li>
+  <li>Dead code and common subexpression elimination</li>
+  <li>Loop unrolloing and invariant hoisting</li>
+  <li>Use <span style="color:blue">-XX:+PrintOptoAssembly</span> /
+    <span style="color:blue">-XX:+PrintAssembly</span> to see the compiler output</br>
+    Requires the <code>hsdis</code> library (<code>hotspot/src/share/tools/hsdis</code>) and the
+    <a href="http://www.gnu.org/software/binutils/">GNU binutils</a></li>
+</ul>
+</p>
+<br/>
+<p>
+Notice that you can usually not debug/profile fully optimized C2 code with Java debuggers/profilers
+<ul>
+  <li>To do this, you need a C debugger (e.g. gdb) and a system profiler (e.g. VTune, oprofile)</li>
+</ul>
+</p>
+</div>
+
+
+
+<div class="slide">
+<h1>JIT Compiler Demo - Hunting a Bug</h1>
+
+<p>In this demo I will show how to find and fix a HotSpot bug. As example I'll take a real bug (<a href="https://bugs.openjdk.java.net/browse/JDK-8011901">JDK-8011901</a> which was introduced in Java 8 but luckily fixed before the first release.</p>
+
+<p>To make the following examples easier to run we set some global Java options with the help of the <code>_JAVA_OPTIONS</code> environment variable. We also set <code>LD_LIBRARY_PATH</code> to point to the location where we've placed the <code>hsdis-amd64.so</code> library.</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+$ <span class="type">export _JAVA_OPTIONS="-XX:-TieredCompilation -XX:-UseOnStackReplacement -XX:CICompilerCount=1 -XX:-UseCompressedOops -Xbatch"</span>
+$ <span class="type">export LD_LIBRARY_PATH=/share/OpenJDK/hsdis</span>
+</pre>
+
+<p>So lets start with the following simple Java program:</p>
+
+<pre style="border-width: thin; color:white;background:black;margin-top: 0; line-height: 125%"><code class="java">import java.util.concurrent.atomic.AtomicLong;
+
+public class AtomicLongTest {
+
+  static AtomicLong al = new AtomicLong(0);
+  static long count, l;
+  static final long f = 4_294_967_296L;
+
+  static void update() {
+    l += f;
+    al.addAndGet(f);
+
+    if (l == al.longValue()) {
+      printOK();
+    }
+    else {
+      printError();
+    }
+  }
+
+  static public void main(String args[]) {
+    for (count = 0; count < Integer.parseInt(args[0]); count++) {
+      update();
+    }
+  }
+  static boolean ok = false, error = false;
+
+  static void printOK() {
+    if (!ok) {
+      System.out.println("OK (iteration " + count +")");
+      ok = true;
+      error = false;
+    }
+  }
+
+  static void printError() {
+    if (!error) {
+      System.out.println("Error (iteration " + count + ", " + l + " != " + al.longValue());
+      error = true;
+      ok = false;
+    }
+    l = al.longValue(); // make them equal again
+  }
+}</code></pre>
+
+<p>.. which increments both, a <code>long</code> and an <code>AtomicLong</code> variable at the same time.</br> We would expect that condition '<code>(l == al.longValue())</code>' is always true:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+$ <span class="type">java AtomicLongTest 10000</span>
+OK (iteration 1)
+$ <span class="type">java AtomicLongTest 10001</span>
+OK (iteration 1)
+Error (iteration 10001, 42953967927296 != 42949672960000
+$ <span class="type">java AtomicLongTest 10002</span>
+OK (iteration 1)
+Error (iteration 10001, 42953967927296 != 42949672960000
+OK (iteration 10002)
+$ <span class="type">java AtomicLongTest 20000</span>
+OK (iteration 1)
+Error (iteration 10001, 42953967927296 != 42949672960000
+OK (iteration 10002)
+Error (iteration 20000, 85895050952704 != 85890755985408
+</pre>
+
+<p>The result is strange: the condition fails one time, in iteration 10.001, and it always fails if we iterate more than 20.000 times! Let's try to debug the program to see what happens:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+$ <span class="type">jdb -launch AtomicLongTest 20000</span>
+...
+main[1] <span class="type">stop in AtomicLongTest:17</span>
+main[1] <span class="type">cont</span>
+> Set deferred breakpoint AtomicLongTest:17
+OK (iteration 1)
+
+The application exited
+</pre>
+
+<p>So that didn't worked out quite well. It seems the bug isn't triggered when we're in the debugger. Let's try to attach when we're already in an error state:</p>
+
+<div style="width: 100%">
+  <div style="float: left; width: 50%">
+    <pre style="line-height:120%; color: black; border-width: thin;">
+$ <span class="type">java -agentlib:jdwp=transport=dt_socket,address=8000,\</span>
+  <span class="type">      server=y,suspend=n AtomicLongTest 200000000</span>
+Listening for transport dt_socket at address: 8000
+OK (iteration 1)
+Error (iteration 10001, 42953967927296 != 42949672960000
+OK (iteration 10002)
+Error (iteration 20000, 85895050952704 != 85890755985408
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+OK (iteration 138809530)<span style="color:green; text-decoration: blink;">  &lt;===</span>
+Error (iteration 138814529, 107365592465408 != 107361297498112
+
+</pre>
+  </div>
+  <div style="float: right; width: 50%">
+    <pre style="line-height:120%; color: black; border-width: thin;">
+
+
+
+
+
+
+
+$ <span class="type">jdb -attach 8000</span>
+...
+&gt; <span class="type">stop in AtomicLongTest:13</span>
+Set breakpoint AtomicLongTest:13
+&gt;
+Breakpoint hit: "thread=main", AtomicLongTest.update(), line=13 bci=20
+13        if (l == al.longValue()) {
+
+main[1] <span class="type">print AtomicLongTest.l</span>
+ AtomicLongTest.l = 85895050952704
+main[1] <span class="type">print AtomicLongTest.al</span>
+ AtomicLongTest.al = "85895050952704"
+main[1] <span class="type">print AtomicLongTest.count</span>
+ AtomicLongTest.count = 138809530<span style="color:green; text-decoration: blink;">  &lt;===</span>
+main[1] <span class="type">clear AtomicLongTest:13</span>
+Removed: breakpoint AtomicLongTest:13
+main[1] <span class="type">cont</span>
+>
+
+The application exited
+</pre>
+  </div>
+</div>
+
+<p>So a Java debugger isn't of much help here. Maybe this is related to JIT compilation (notice that Java debuggers usually can not debug or set breakpoints in JIT-compiled methods). Let's see:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+$ <span class="type">java -XX:+PrintCompilation AtomicLongTest 20000 | egrep "^OK|^Error|update"</span>
+
+OK (iteration 1)
+   1145   49    b        AtomicLongTest::update (43 bytes)
+   1169   49             AtomicLongTest::update (43 bytes)   made not entrant
+Error (iteration 10001, 42953967927296 != 42949672960000
+OK (iteration 10002)
+   1173   56    b        AtomicLongTest::update (43 bytes)
+Error (iteration 20000, 85895050952704 != 85890755985408
+</pre>
+
+<p>So it seems that every time after the JIT-compilation of <code>AtomicLongTest::update()</code> we get an error! Let's try a real debugger:)</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+$ <span class="type">gdb java</span>
+...
+(gdb) <span class="type">break breakpoint</span>
+Breakpoint 1 at 0x7ffff68a3bfe: file /share/OpenJDK/jdk9-dev/hotspot/src/os/linux/vm/os_linux.cpp, line 457.
+(gdb) <span class="type">run -XX:CompileCommand="break AtomicLongTest.update" AtomicLongTest 20000</span>
+...
+OK (iteration 1)
+### Breaking when compiling:  AtomicLongTest::update
+[Switching to Thread 0x7fff9e924700 (LWP 10742)]
+
+Breakpoint 1, breakpoint ()
+    at /share/OpenJDK/jdk9-dev/hotspot/src/os/linux/vm/os_linux.cpp:457
+457	extern "C" void breakpoint() {
+(gdb) <span class="type">where</span>
+#0  breakpoint () at /share/OpenJDK/jdk9-dev/hotspot/src/os/linux/vm/os_linux.cpp:457
+#1  0x00007ffff62dd8d9 in Compile::print_compile_messages (this=0x7fff9e922c80)
+    at /share/OpenJDK/jdk9-dev/hotspot/src/share/vm/opto/compile.cpp:500
+#2  0x00007ffff62de822 in Compile::Compile (this=0x7fff9e922c80, ci_env=0x7fff9e923940, 
+    compiler=0x7ffff01266e0, target=0x7ffff014f190, osr_bci=-1, subsume_loads=true, 
+    do_escape_analysis=true, eliminate_boxing=true)
+    at /share/OpenJDK/jdk9-dev/hotspot/src/share/vm/opto/compile.cpp:709
+#3  0x00007ffff61ea0d6 in C2Compiler::compile_method (this=0x7ffff01266e0, 
+    env=0x7fff9e923940, target=0x7ffff014f190, entry_bci=-1)
+    at /share/OpenJDK/jdk9-dev/hotspot/src/share/vm/opto/c2compiler.cpp:101
+#4  0x00007ffff62fb174 in CompileBroker::invoke_compiler_on_method (task=0x7ffff01817b0)
+    at /share/OpenJDK/jdk9-dev/hotspot/src/share/vm/compiler/compileBroker.cpp:1974
+#5  0x00007ffff62fa69c in CompileBroker::compiler_thread_loop ()
+    at /share/OpenJDK/jdk9-dev/hotspot/src/share/vm/compiler/compileBroker.cpp:1796
+#6  0x00007ffff6a414df in compiler_thread_entry (thread=0x7ffff0137800, 
+    __the_thread__=0x7ffff0137800)
+    at /share/OpenJDK/jdk9-dev/hotspot/src/share/vm/runtime/thread.cpp:3164
+#7  0x00007ffff6a3c387 in JavaThread::thread_main_inner (this=0x7ffff0137800)
+    at /share/OpenJDK/jdk9-dev/hotspot/src/share/vm/runtime/thread.cpp:1678
+#8  0x00007ffff6a3c232 in JavaThread::run (this=0x7ffff0137800)
+    at /share/OpenJDK/jdk9-dev/hotspot/src/share/vm/runtime/thread.cpp:1658
+#9  0x00007ffff68a4823 in java_start (thread=0x7ffff0137800)
+    at /share/OpenJDK/jdk9-dev/hotspot/src/os/linux/vm/os_linux.cpp:830
+#10 0x00007ffff73dd182 in start_thread (arg=0x7fff9e924700) at pthread_create.c:312
+#11 0x00007ffff78f1fbd in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:111
+(gdb) <span class="type">cont</span>
+Continuing.
+...
+(gdb) <span class="type">where</span>
+#0  breakpoint () at /share/OpenJDK/jdk9-dev/hotspot/src/os/linux/vm/os_linux.cpp:457
+#1  0x00007ffff62e4c6a in Compile::Optimize (this=0x7fff9e922c80)
+    at /share/OpenJDK/jdk9-dev/hotspot/src/share/vm/opto/compile.cpp:2041
+#2  0x00007ffff62df09e in Compile::Compile (this=0x7fff9e922c80, ci_env=0x7fff9e923940, 
+    compiler=0x7ffff01266e0, target=0x7ffff014f190, osr_bci=-1, subsume_loads=true, 
+    do_escape_analysis=true, eliminate_boxing=true)
+    at /share/OpenJDK/jdk9-dev/hotspot/src/share/vm/opto/compile.cpp:837
+...
+(gdb) <span class="type">cont</span>
+Continuing.
+...
+(gdb) <span class="type">where</span>
+#0  breakpoint () at /share/OpenJDK/jdk9-dev/hotspot/src/os/linux/vm/os_linux.cpp:457
+#1  0x00007ffff68a3be0 in os::breakpoint ()
+    at /share/OpenJDK/jdk9-dev/hotspot/src/os/linux/vm/os_linux.cpp:454
+#2  0x00007fffed1a9671 in ?? ()
+#3  0x00007fffacd5c1b0 in ?? ()
+</pre>
+
+<p>We use the <code>-XX:CompileCommand</code> option to instruct the VM to stop when a certain method is compiled AND at the beginning of its execution. For this option to have any effect, we also need to set a breakpoint in the helper function <code>breakpoint()</code> whithin the VM.</p>
+
+<p>The first two times, the debugger stops at the beginning of the method compilation (at <code>Compile::Compile()</code>) and when the VM starts the optimzation passes (at <code>Compile::Optimze()</code>. The third time it stops, when the compiled method is ionvoked for the first time. Obviously, the debugger doesn't know where we are, because he has no debugging information for generated code. Fortunately we can use the various HotSpot debugging helpers to find out what's going on:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">call pns($sp, $rbp, $pc)</span>
+
+"Executing pns"
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [libjvm.so+0xc94bfe]  breakpoint+0x8
+V  [libjvm.so+0xc94be0]  os::breakpoint()+0x1c
+J 49 C2 AtomicLongTest.update()V (43 bytes) @ 0x00007fffed1a9671 [0x00007fffed1a9660+0x11]
+j  AtomicLongTest.main([Ljava/lang/String;)V+18
+v  ~StubRoutines::call_stub
+V  [libjvm.so+0x9b763d]  JavaCalls::call_helper(JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x6d9
+V  [libjvm.so+0xca00ed]  os::os_exception_wrapper(void (*)(JavaValue*, methodHandle*, JavaCallArguments*, Thread*), JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x41
+V  [libjvm.so+0x9b6f4d]  JavaCalls::call(JavaValue*, methodHandle, JavaCallArguments*, Thread*)+0x8b
+V  [libjvm.so+0x9cfdb1]  jni_invoke_static(JNIEnv_*, JavaValue*, _jobject*, JNICallType, _jmethodID*, JNI_ArgumentPusher*, Thread*)+0x205
+V  [libjvm.so+0x9e72df]  jni_CallStaticVoidMethod+0x358
+C  [libjli.so+0x8820]  JavaMain+0x8af
+C  [libpthread.so.0+0x8182]  start_thread+0xc2
+
+(gdb) <span class="type">up</span>
+#1  0x00007ffff68a3be0 in os::breakpoint ()
+    at /share/OpenJDK/jdk9-dev/hotspot/src/os/linux/vm/os_linux.cpp:454
+454	  BREAKPOINT;
+(gdb) <span class="type">up</span>
+#2  0x00007fffed1a9671 in ?? ()
+(gdb) <span class="type">call find($pc)</span>
+
+"Executing find"
+0x00007fffed1a9671 is at entry_point+17 in (nmethod*)0x00007fffed1a9510
+Compiled method (c2) 8089115   49             AtomicLongTest::update (43 bytes)
+ total in heap  [0x00007fffed1a9510,0x00007fffed1a9960] = 1104
+ relocation     [0x00007fffed1a9640,0x00007fffed1a9660] = 32
+ main code      [0x00007fffed1a9660,0x00007fffed1a9740] = 224
+ stub code      [0x00007fffed1a9740,0x00007fffed1a9758] = 24
+ oops           [0x00007fffed1a9758,0x00007fffed1a9760] = 8
+ metadata       [0x00007fffed1a9760,0x00007fffed1a9788] = 40
+ scopes data    [0x00007fffed1a9788,0x00007fffed1a9808] = 128
+ scopes pcs     [0x00007fffed1a9808,0x00007fffed1a9948] = 320
+ dependencies   [0x00007fffed1a9948,0x00007fffed1a9950] = 8
+ nul chk table  [0x00007fffed1a9950,0x00007fffed1a9960] = 16
+</pre>
+
+<p>So we're indeed in the code the JIT compiler has generated for <code>AtomicLongTest::update()</code>. Let's see how it looks like:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">x /12i $pc</span>
+=> 0x7fffed1a9671:	movabs $0x7fffd878f8a8,%r10 <span style="color:green;">// AtomicLongTest Class</span>
+   0x7fffed1a967b:	mov    0xa0(%r10),%r11      <span style="color:green;">// AtomicLongTest.al</span>
+   0x7fffed1a9682:	movabs $0x100000000,%r8     <span style="color:green;">// copy 'f' (4_294_967_296L) to r8</span>
+   0x7fffed1a968c:	add    %r8,0xb0(%r10)       <span style="color:green;">// AtomicLongTest.l += 4_294_967_296L</span>
+   0x7fffed1a9693:	test   %r11,%r11            <span style="color:green;">// Null-check for AtomicLongTest.al</span>
+   0x7fffed1a9696:	je     0x7fffed1a96cd
+   0x7fffed1a9698:	lock addq $0x0,0x10(%r11)   <span style="color:red; text-decoration: blink;">// AtomicLongTest.al.value += 0</span>
+   0x7fffed1a969e:	mov    0xa0(%r10),%r11      <span style="color:green;">// reload AtomicLongTest.al</span>
+   0x7fffed1a96a5:	mov    0x10(%r11),%r11      <span style="color:green;">// reload AtomicLongTest.al.value</span>
+   0x7fffed1a96a9:	mov    0xb0(%r10),%r8       <span style="color:green;">// copy AtomicLongTest.l to r8</span>
+   0x7fffed1a96b0:	cmp    %r11,%r8             <span style="color:green;">// (l == al.longValue())</span>
+   0x7fffed1a96b3:	jne    0x7fffed1a96dd
+
+(gdb) <span class="type">call find(0x7fffd878f8a8)</span>
+"Executing find"
+0x00007fffd878f8a8 is an oop
+java.lang.Class
+ - klass: 'java/lang/Class'
+ - ---- fields (total size 25 words):
+ - private volatile transient strict 'cachedConstructor' 'Ljava/lang/reflect/Constructor;' @16  NULL (0 0)
+ - private volatile transient strict 'newInstanceCallerCache' 'Ljava/lang/Class;' @24  NULL (0 0)
+ - private transient 'name' 'Ljava/lang/String;' @32  "AtomicLongTest" (d878f988 7fff) <span style="color:green;"> &lt;===</span>
+ - private final 'classLoader' 'Ljava/lang/ClassLoader;' @40  a 'sun/misc/Launcher$AppClassLoader' (d865ebd8 7fff)
+ - private final strict 'componentType' 'Ljava/lang/Class;' @48  NULL (0 0)
+ - private volatile transient strict 'reflectionData' 'Ljava/lang/ref/SoftReference;' @56  a 'java/lang/ref/SoftReference' (d878fbc0 7fff)
+ - private volatile transient 'genericInfo' 'Lsun/reflect/generics/repository/ClassRepository;' @64  NULL (0 0)
+ - private volatile transient strict 'enumConstants' '[Ljava/lang/Object;' @72  NULL (0 0)
+ - private volatile transient strict 'enumConstantDirectory' 'Ljava/util/Map;' @80  NULL (0 0)
+ - private volatile transient 'annotationData' 'Ljava/lang/Class$AnnotationData;' @88  NULL (0 0)
+ - private volatile transient 'annotationType' 'Lsun/reflect/annotation/AnnotationType;' @96  NULL (0 0)
+ - transient 'classValueMap' 'Ljava/lang/ClassValue$ClassValueMap;' @104  NULL (0 0)
+ - private volatile transient 'classRedefinedCount' 'I' @144  0
+ - signature: LAtomicLongTest;
+ - fake entry for mirror: 'AtomicLongTest'
+ - fake entry for array: NULL
+ - fake entry for oop_size: 25
+ - fake entry for static_oop_field_count: 1
+ - static 'al' 'Ljava/util/concurrent/atomic/AtomicLong;' @160  a 'java/util/concurrent/atomic/AtomicLong' (d87901f8 7fff) <span style="color:green;"> &lt;===</span>
+ - static 'count' 'J' @168  10001 (2711 0)
+ - static 'l' 'J' @176  42949672960000 (0 2710) <span style="color:green;"> &lt;===</span>
+ - static final 'f' 'J' @184  4294967296 (0 1)
+ - static 'ok' 'Z' @192  true
+ - static 'error' 'Z' @193  false
+</pre>
+
+<p>If we step instruction-wise till the compare we can verify, that <code>AtomicLongTest.l</code> and the long value of <code>AtomicLongTest.al</code> do indeed differ.</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">print $r11</span>
+$5 = 42949672960000
+(gdb) <span class="type">print $r8</span>
+$6 = 42953967927296
+</pre>
+
+<p>And if we continue the exection, we'll get the error printed out - however just for a single iteration:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">cont</span>
+Continuing.
+Error (iteration 10001, 42953967927296 != 42949672960000
+OK (iteration 10002)
+</pre>
+
+<p>For some reason we seem to have been just one time in the JIT compiled method (i.e. we don't stop at the breakpoint anymore. Instead, the method seems to be recompiled again:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+### Breaking when compiling:  AtomicLongTest::update
+[Switching to Thread 0x7fff9e924700 (LWP 10742)]
+
+Breakpoint 1, breakpoint ()
+    at /share/OpenJDK/jdk9-dev/hotspot/src/os/linux/vm/os_linux.cpp:457
+457	extern "C" void breakpoint() {
+
+(gdb) <span class="type">cont</span>
+(gdb) <span class="type">cont</span>
+(gdb) <span class="type">call pns($sp, $rbp, $pc)</span>
+
+"Executing pns"
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [libjvm.so+0xc94bfe]  breakpoint+0x8
+V  [libjvm.so+0xc94be0]  os::breakpoint()+0x1c
+J 56 C2 AtomicLongTest.update()V (43 bytes) @ 0x00007fffed1ad571 [0x00007fffed1ad560+0x11]
+j  AtomicLongTest.main([Ljava/lang/String;)V+18
+v  ~StubRoutines::call_stub
+V  [libjvm.so+0x9b763d]  JavaCalls::call_helper(JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x6d9
+V  [libjvm.so+0xca00ed]  os::os_exception_wrapper(void (*)(JavaValue*, methodHandle*, JavaCallArguments*, Thread*), JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x41
+V  [libjvm.so+0x9b6f4d]  JavaCalls::call(JavaValue*, methodHandle, JavaCallArguments*, Thread*)+0x8b
+V  [libjvm.so+0x9cfdb1]  jni_invoke_static(JNIEnv_*, JavaValue*, _jobject*, JNICallType, _jmethodID*, JNI_ArgumentPusher*, Thread*)+0x205
+V  [libjvm.so+0x9e72df]  jni_CallStaticVoidMethod+0x358
+C  [libjli.so+0x8820]  JavaMain+0x8af
+C  [libpthread.so.0+0x8182]  start_thread+0xc2
+</pre>
+
+<p>We can easily verify from the address of the function that we're in a different compiled version of <code>AtomicLongTest.update()</code> now.
+And we observe, that after the method has been compiled for a secons time, we now permanently get the error until the program exits:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">cont</span>
+Continuing.
+Error (iteration 20000, 85895050952704 != 85890755985408
+...
+[Inferior 1 (process 12698) exited normally]
+</pre>
+
+<p> So the problem why we only got the error one time for the first version of the compiled method and didn't run into the breakpoint anymore is because that version conatained a so called "uncomman trap" for the part of the branch which printed the error. That means that the JIT compiler didn't generate any code for that part, because he knew from the previous runs (from the profiling data collected by the interpreter), that the condition never failed. Now, when the condition suddently fails during the first exection of the compiled code, the VM has to deoptimze the compiled method and compile it one more time. The new version will now contain code for both parts of the bracnch.</p>
+
+<p>And once we get in to the compiled code again, the condition starts to be false again. As we can easily see from the assembly, the instruction which increments the <code>AtomicLong</code> object is clearly wrong, because it adds '0' to the AtomicLong objects instead of '4_294_967_296L' as expected.</p>
+
+<p>In such a case it can help to take a look at the assembly/opto-assembly produced by the JIT himself to see what happens, because these assembly outputs contain some more meta-information:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">run -XX:+PrintOptoAssembly -XX:CompileCommand="print AtomicLongTest.update" AtomicLongTest 22000 | less</span>
+...
+{method}
+ - this oop:          0x00007fffacd5c1b0
+ - method holder:     'AtomicLongTest'
+ - constants:         0x00007fffacd5bca0 constant pool [103] {0x00007fffacd5bca0} for 'AtomicLongTe
+st' cache=0x00007fffacd5c788
+ - access:            0x81000008  static
+ - name:              'update'
+ - signature:         '()V'
+...
+033     ADDQ  [[R11 + #16 (8-bit)]],#4294967296
+</pre>
+
+<p>So while the opto-assembly looks still OK, the generated machine code (see blow) already adds '0' to the AtomicLong objects instead of '4_294_967_296L' which is clearly wrong:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+...
+ 0x00007fffed1a9613: lock addq $0x0,0x10(%r11)  ;*invokevirtual getAndAddLong
+                                                ; - java.util.concurrent.atomic.AtomicLong::addAndGet@8 (line 219)
+                                                ; - AtomicLongTest::update@16 (line 11)
+...
+</pre>
+
+<p>If you're familiar with x64 assembly, you may kow that the <code>addq</code> instruction only supports 32-bit immediats, but our constant is 2^32 which is too big and wraps around to 0 if casted to a 32-bit value.</p>
+
+<p>If we grep for "ADDQ" in the HotSpot sources we only find one hit in the <file>x86_64.ad</file> file:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+$ <span class="type">grep -r ADDQ src/</span>
+src/cpu/x86/vm/x86_64.ad:  format %{ "ADDQ  [$mem],$add" %}
+</pre>
+
+<p>And if we look at this file which is used by the C2-JIT for code generation, we can see that this instruction indeed takes an immediate long argument and emits an <code>addq</code> instruction with this long immediate value as argument:</p>
+
+<pre style="border-width: thin; color:white;background:black;margin-top: 0; line-height: 125%"><code class="c">instruct xaddL_no_res( memory mem, Universe dummy, immL add, rFlagsReg cr) %{
+  predicate(n->as_LoadStore()->result_not_used());
+  match(Set dummy (GetAndAddL mem add));
+  effect(KILL cr);
+  format %{ "ADDQ  [$mem],$add" %}
+  ins_encode %{
+    if (os::is_MP()) { __ lock(); }
+    __ addq($mem$$Address, $add$$constant);
+  %}
+  ins_pipe( pipe_cmpxchg );
+%}</code></pre>
+
+<p>The fix is trivial - we can just change the <code>immL</code> argument to <code>immL32</code>, rebuild and hopefully everything should work jsut fine!</p>
+
+
+<p>As a side note I want to mention that it is also possibly to identify the before mentioned "uncommon trap" in the opt-assembly:
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+...
+044   B3: #     B7 B4 <- B2  Freq: 0,999998
+044     movq    R8, [R10 + #176 (32-bit)]       # long ! Field: AtomicLongTest.l
+04b     MEMBAR-acquire ! (empty encoding)
+04b     cmpq    R8, R11
+04e     jne,s   B7  P=0,000000 C=6700,000000    <span style="color:green;">// Jump to uncommon trap in block 7 if condtion fails.</span>
+...
+079   B7: #     N1 <- B3  Freq: 4,99999e-07
+079     cmpq    R8, R11 # CmpL3
+        movl    RBP, -1
+        jl,s    done
+        setne   RBP
+        movzbl  RBP, RBP
+        done:
+08b     movl    RSI, #-163      # int
+        nop     # 3 bytes pad for loops and calls
+093     call,static  wrapper for: uncommon_trap(reason='unstable_if' action='reinterpret') <span style="color:green;"> &lt;===</span>
+        # AtomicLongTest::update @ bci:30  STK[0]=RBP
+        # OopMap{off=152}
+098     int3    # ShouldNotReachHere
+...
+</pre>
+
+
+</div>
+
+
+<div class="slide">
+<h1>JIT Compiler Demo - Simple Loops</h1>
+
+
+<pre style="border-width: thin; margin-top: 0; background:black; line-height: 125%"><code class="java">public class IntLoop {
+
+  static void loop(int count) {
+    for (int i = 0; i < count; i++)
+      for (int j = 0; j < 1_000_000; j++);
+  }
+
+  public static void main(String[] args) {
+
+    for (long i = 0; i < 100; i++)
+      loop(2);
+    System.out.println("Warmup done");
+
+    long start  = System.currentTimeMillis();
+    loop(Integer.parseInt(args[0]));
+    long end = System.currentTimeMillis();
+
+    System.out.println(end - start + "ms");
+  }
+}</code></pre>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+$ <span class="type">java -Xint IntLoop 10</span>
+Warmup done
+112ms
+$ <span class="type">java -Xint IntLoop 100</span>
+Warmup done
+1111ms
+$ <span class="type">java -Xint IntLoop 1000</span>
+Warmup done
+11202ms
+</pre>
+
+<p>For the interprter we get nice linear scaling - no surprise!</p>
+
+<p>Now lets try with JIT:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+$ <span class="type">export MY_OPTS="-XX:-TieredCompilation -XX:-UseOnStackReplacement -XX:CICompilerCount=1 -XX:LoopUnrollLimit=0"</span>
+$ <span class="type">java -XX:+PrintCompilation $MY_OPTS IntLoop 10</span>
+    583    1             IntLoop::loop (28 bytes)
+Warmup done
+0ms
+$ <span class="type">java -XX:+PrintCompilation $MY_OPTS IntLoop 100000000</span>
+    598    1             IntLoop::loop (28 bytes)
+Warmup done
+0ms
+</pre>
+
+<p>That's really impressing - couldn't have been better!</p>
+
+<p>Now lets change the example slightly..</p>
+
+<pre style="border-width: thin; margin-top: 0; background:black; line-height: 125%"><code class="java">public class LongLoop {
+
+  static void loop(int count) {
+    for (long i = 0; i < count; i++)
+      for (long j = 0; j < 1_000_000; j++);
+  }
+
+  public static void main(String[] args) {
+
+    for (long i = 0; i < 100; i++)
+      loop(2);
+    System.out.println("Warmup done");
+
+    long start  = System.currentTimeMillis();
+    loop(Integer.parseInt(args[0]));
+    long end = System.currentTimeMillis();
+
+    System.out.println(end - start + "ms");
+  }
+}</code></pre>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+$ <span class="type">java -Xint LongLoop 10</span>
+Warmup done
+155ms
+$ <span class="type">java -Xint LongLoop 100</span>
+Warmup done
+1535ms
+$ <span class="type">java -Xint LongLoop 1000</span>
+Warmup done
+15345ms
+</pre>
+
+<p>Again no surprise for the interpreted version. It needs a little longer than the int version, but it's still linear. So let's try the JITed version:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+$ <span class="type">java -XX:+PrintCompilation $MY_OPTS LongLoop 10</span>
+    583    1             LongLoop::loop (34 bytes)
+Warmup done
+3ms
+$ <span class="type">java -XX:+PrintCompilation $MY_OPTS LongLoop 100</span>
+    635    1             LongLoop::loop (34 bytes)
+Warmup done
+35ms
+$ <span class="type">java -XX:+PrintCompilation $MY_OPTS LongLoop 1000</span>
+    620    1             LongLoop::loop (34 bytes)
+Warmup done
+330ms
+$ <span class="type">java -XX:+PrintCompilation $MY_OPTS LongLoop 10000</span>
+    590    1             LongLoop::loop (34 bytes)
+Warmup done
+3235ms
+</pre>
+
+<p>That's a little suprising. The JITed version is considerably faster than the interpreted one, but it bocomes linear with regard to the input parmater
+  (whereas the int version has been constant!)</p>
+
+<p>Let's have a look at the generated code with the help of the -XX:+PrintAssembly option and the hsdis library. First we examine the integer version:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+$ <span class="type">java -XX:+PrintAssembly -XX:+PrintCompilation $MY_OPTS IntLoop 10</span>
+    622    1             IntLoop::loop (28 bytes)
+Loaded disassembler from /share/OpenJDK/jdk1.7.0_hsx/jre/lib/amd64/hsdis-amd64.so
+Decoding compiled method 0x00007f8c47b4af90:
+Code:
+[Disassembling for mach='i386:x86-64']
+[Entry Point]
+[Verified Entry Point]
+[Constants]
+  # {method} 'loop' '(I)V' in 'IntLoop'
+  # parm0:    rsi       = int
+  #           [sp+0x20]  (sp of caller)
+  ;; N1: #	B1 <- B1  Freq: 1
+
+  ;; B1: #	N1 <- BLOCK HEAD IS JUNK   Freq: 1
+
+  0x00007f8c47b4b0c0: sub    $0x18,%rsp
+  0x00007f8c47b4b0c7: mov    %rbp,0x10(%rsp)    ;*synchronization entry
+                                                ; - IntLoop::loop@-1 (line 4)
+  0x00007f8c47b4b0cc: add    $0x10,%rsp
+  0x00007f8c47b4b0d0: pop    %rbp
+  0x00007f8c47b4b0d1: test   %eax,0x6140f29(%rip)        # 0x00007f8c4dc8c000
+                                                ;   {poll_return}
+  0x00007f8c47b4b0d7: retq
+  ...
+</pre>
+
+<p>And compare it with the code generated for the long version:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+$ <span class="type">java -XX:+PrintAssembly -XX:+PrintCompilation $MY_OPTS LongLoop 10</span>
+    638    1             LongLoop::loop (34 bytes)
+Loaded disassembler from /share/OpenJDK/jdk1.7.0_hsx/jre/lib/amd64/hsdis-amd64.so
+Decoding compiled method 0x00007f9c80264e50:
+Code:
+[Disassembling for mach='i386:x86-64']
+[Entry Point]
+[Verified Entry Point]
+[Constants]
+  # {method} 'loop' '(I)V' in 'LongLoop'
+  # parm0:    rsi       = int
+  #           [sp+0x20]  (sp of caller)
+  ;; N1: #	B1 <- B3  Freq: 1
+
+  ;; B1: #	B3 B2 <- BLOCK HEAD IS JUNK   Freq: 1
+
+  0x00007f9c80264f80: sub    $0x18,%rsp
+  0x00007f9c80264f87: mov    %rbp,0x10(%rsp)    ;*synchronization entry
+                                                ; - LongLoop::loop@-1 (line 4)
+  0x00007f9c80264f8c: movslq %esi,%r10          ;*i2l  ; - LongLoop::loop@4 (line 4)
+  0x00007f9c80264f8f: test   %r10,%r10
+  0x00007f9c80264f92: jle    0x00007f9c80264f99  ;*ifge
+                                                ; - LongLoop::loop@6 (line 4)
+  ;; B2: #	B7 <- B1  Freq: 0.5
+
+  0x00007f9c80264f94: xor    %r11d,%r11d
+  0x00007f9c80264f97: jmp    0x00007f9c80264fd2  ;*return
+                                                ; - LongLoop::loop@33 (line 6)
+  ;; B3: #	N1 <- B6 B1  Freq: 1
+
+  0x00007f9c80264f99: add    $0x10,%rsp
+  0x00007f9c80264f9d: pop    %rbp
+  0x00007f9c80264f9e: test   %eax,0x614105c(%rip)        # 0x00007f9c863a6000
+                                                ;   {poll_return}
+  0x00007f9c80264fa4: retq
+  ...
+  0x00007f9c80264faf: nop
+  ;; B4: #	B5 <- B5  top-of-loop Freq: 4.93447e+06
+
+  0x00007f9c80264fb0: add    $0x1,%r8           ; OopMap{off=52}
+                                                ;*goto
+                                                ; - LongLoop::loop@23 (line 5)
+  ;; B5: #	B4 B6 <- B7 B4 	Loop: B5-B4 inner  Freq: 4.93447e+06
+
+  0x00007f9c80264fb4: test   %eax,0x6141046(%rip)        # 0x00007f9c863a6000
+                                                ;*goto
+                                                ; - LongLoop::loop@23 (line 5)
+                                                ;   {poll}
+  0x00007f9c80264fba: cmp    $0xf4240,%r8
+  0x00007f9c80264fc1: jl     0x00007f9c80264fb0  ;*ifge
+                                                ; - LongLoop::loop@16 (line 5)
+  ;; B6: #	B3 B7 <- B5  Freq: 5
+
+  0x00007f9c80264fc3: add    $0x1,%r11          ; OopMap{off=71}
+                                                ;*goto
+                                                ; - LongLoop::loop@30 (line 4)
+  0x00007f9c80264fc7: test   %eax,0x6141033(%rip)        # 0x00007f9c863a6000
+                                                ;*goto
+                                                ; - LongLoop::loop@30 (line 4)
+                                                ;   {poll}
+  0x00007f9c80264fcd: cmp    %r10,%r11
+  0x00007f9c80264fd0: jge    0x00007f9c80264f99  ;*lconst_0
+                                                ; - LongLoop::loop@9 (line 5)
+  ;; B7: #	B5 <- B2 B6 	Loop: B7-B6  Freq: 5
+
+  0x00007f9c80264fd2: mov    $0x1,%r8d
+  0x00007f9c80264fd8: jmp    0x00007f9c80264fb4
+  0x00007f9c80264fda: hlt
+  ...
+</pre>
+
+<p>So that's a lot mor code for only the fact that we've changed an integer into a long! We will see some of the implications in the next example.</p>
+
+</div>
+
+
+<div class="slide">
+<h1>JIT Demo - Simple loops considered harmfull</h1>
+
+<p>
+In this part we use the same example, but additionally, we start a concurrent thread which triggers a GC
+every second while we are looping in out main thread. Let's start this
+time with the long version:
+</p>
+
+<pre style="border-width: thin; margin-top: 0; background:black; line-height: 125%"><code class="java">public class LongLoopWithGC {
+
+  static long tmp;
+
+  static void loop(int count) {
+    for (long i = 1; i < count; i++)
+      for (long j = 1; j < 1_000_000; j++)
+        tmp++;
+  }
+
+  public static void main(String[] args) {
+
+    for (long i = 0; i < 100; i++)
+      loop(2);
+    System.out.println("Warmup done");
+
+    new Thread() {
+      public void run() {
+        while(true) {
+          try { Thread.sleep(1_000); } catch (InterruptedException e) {}
+          System.gc();
+        }
+      }
+    }.start();
+
+    long start  = System.currentTimeMillis();
+    loop(Integer.parseInt(args[0]));
+    long end = System.currentTimeMillis();
+
+    System.out.println(end - start + "ms");
+    System.exit(0);
+  }
+}</code></pre>
+
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+$ <span class="type">java -XX:+PrintCompilation -verbose:gc $MY_OPTS LongLoopWithGC 100</span>
+    567    1             LongLoopWithGC::loop (42 bytes)
+Warmup done
+68ms
+$ <span class="type">java -XX:+PrintCompilation -verbose:gc $MY_OPTS LongLoopWithGC 1000</span>
+    568    1             LongLoopWithGC::loop (42 bytes)
+Warmup done
+646ms
+$ <span class="type">java -XX:+PrintCompilation -verbose:gc $MY_OPTS LongLoopWithGC 10000</span>
+    560    1             LongLoopWithGC::loop (42 bytes)
+Warmup done
+[GC 317K->304K(60800K), 0.0112460 secs]
+[Full GC 304K->217K(60800K), 0.0799480 secs]
+[GC 852K->281K(60800K), 0.0007890 secs]
+[Full GC 281K->217K(60800K), 0.0562010 secs]
+[GC 217K->217K(60800K), 0.0008090 secs]
+[Full GC 217K->217K(60800K), 0.0570710 secs]
+[GC 217K->217K(60800K), 0.0007410 secs]
+[Full GC 217K->217K(60800K), 0.0541550 secs]
+[GC 217K->217K(60800K), 0.0006150 secs]
+[Full GC 217K->217K(60800K), 0.0482390 secs]
+[GC 217K->217K(60800K), 0.0006570 secs]
+[Full GC 217K->217K(60800K), 0.0527470 secs]
+7014ms
+</pre>
+
+
+<p>No surprise until now - everything looks as expected! Now lets change the example in the same way as before
+(i.e. replace the long iterators by integer ones). Should we see any differences?</p>
+
+<pre style="border-width: thin; margin-top: 0; background:black; line-height: 125%"><code class="java">...
+  static void loop(int count) {
+    for (int i = 1; i < count; i++)
+      for (int j = 1; j < 1_000_000; j++)
+        tmp++;
+  }
+...
+</code></pre>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+$ <span class="type">java -XX:+PrintCompilation -verbose:gc $MY_OPTS IntLoopWithGC 1000</span>
+    543    1             IntLoopWithGC::loop (36 bytes)
+Warmup done
+341ms
+$ <span class="type">java -XX:+PrintCompilation -verbose:gc $MY_OPTS IntLoopWithGC 10000</span>
+    537    1             IntLoopWithGC::loop (36 bytes)
+Warmup done
+[GC 317K->272K(60800K), 0.0109640 secs]
+[Full GC 272K->217K(60800K), 0.0659020 secs]
+3809ms
+$ <span class="type">java -XX:+PrintCompilation -verbose:gc $MY_OPTS IntLoopWithGC 100000</span>
+    560    1             IntLoopWithGC::loop (36 bytes)
+Warmup done
+[GC 317K->320K(60800K), 0.0112450 secs]
+[Full GC 320K->217K(60800K), 0.0708950 secs]
+37818ms
+</pre>
+
+<p>Very strange! No difference how long our main thread is running, we always only see a single GC!</p>
+
+<p>But why? Let's try to attach with a Java debugger to see what happens..</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+$ <span class="type">java -XX:+PrintCompilation -verbose:gc -agentlib:jdwp=transport=dt_socket,address=8000,server=y,suspend=n $MY_OPTS IntLoopWithGC 100000 &</span>
+$ <span class="type">jdb -attach 8000</span>
+java.io.IOException
+	at com.sun.tools.jdi.VirtualMachineManagerImpl.createVirtualMachine(VirtualMachineManagerImpl.java:234)
+	at com.sun.tools.jdi.VirtualMachineManagerImpl.createVirtualMachine(VirtualMachineManagerImpl.java:241)
+	at com.sun.tools.jdi.GenericAttachingConnector.attach(GenericAttachingConnector.java:117)
+	at com.sun.tools.jdi.SocketAttachingConnector.attach(SocketAttachingConnector.java:90)
+	at com.sun.tools.example.debug.tty.VMConnection.attachTarget(VMConnection.java:347)
+	at com.sun.tools.example.debug.tty.VMConnection.open(VMConnection.java:156)
+	at com.sun.tools.example.debug.tty.Env.init(Env.java:54)
+	at com.sun.tools.example.debug.tty.TTY.main(TTY.java:1057)
+
+Fatal error:
+Unable to attach to target VM.
+</pre>
+
+<p>It doesn't work! We can not attach to 'IntLoopWithGC'. But it works with 'LongLoopWithGC':</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+$ <span class="type">java -XX:+PrintCompilation -verbose:gc -agentlib:jdwp=transport=dt_socket,address=8000,server=y,suspend=n $MY_OPTS LongLoopWithGC 100000 &</span>
+$ <span class="type">jdb -attach 8000</span>
+Set uncaught java.lang.Throwable
+Set deferred uncaught java.lang.Throwable
+Initializing jdb ...
+> threads
+Group system:
+  (java.lang.ref.Reference$ReferenceHandler)0x16e Reference Handler cond. waiting
+  (java.lang.ref.Finalizer$FinalizerThread)0x16f  Finalizer         cond. waiting
+  (java.lang.Thread)0x170                         Signal Dispatcher running
+Group main:
+  (java.lang.Thread)0x1                           main              running
+  (LongLoopWithGC$1)0x172                         Thread-0          sleeping
+> suspend 1
+> where 1
+  [1] LongLoopWithGC.loop (LongLoopWithGC.java:7)
+  [2] LongLoopWithGC.main (LongLoopWithGC.java:27)
+</pre>
+
+<p>Ok, let's see what we can find out with GDB:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+$ <span class="type">gdb java</span>
+(gdb) <span class="type">run -verbose:gc -XX:+PrintAssembly -XX:+PrintCompilation $MY_OPTS IntLoopWithGC 100000</span>
+Disassembling for mach='i386:x86-64']
+[Entry Point]
+[Verified Entry Point]
+[Constants]
+  # {method} 'loop' '(I)V' in 'IntLoopWithGC'
+  # parm0:    rsi       = int
+  #           [sp+0x20]  (sp of caller)
+  ;; N1: #	B1 <- B6  Freq: 1
+
+  ;; B1: #	B6 B2 <- BLOCK HEAD IS JUNK   Freq: 1
+
+  0x00007ffff1eb6fc0: sub    $0x18,%rsp
+  0x00007ffff1eb6fc7: mov    %rbp,0x10(%rsp)    ;*synchronization entry
+                                                ; - IntLoopWithGC::loop@-1 (line 6)
+  0x00007ffff1eb6fcc: cmp    $0x1,%esi
+  0x00007ffff1eb6fcf: jle    0x00007ffff1eb700c  ;*if_icmpge
+                                                ; - IntLoopWithGC::loop@4 (line 6)
+  ;; B2: #	B3 <- B1  Freq: 0.5
+
+  0x00007ffff1eb6fd1: movabs $0xeb5aa680,%r10   ;   {oop(a 'java/lang/Class' = 'IntLoopWithGC')}
+  0x00007ffff1eb6fdb: mov    0x70(%r10),%r11
+  0x00007ffff1eb6fdf: mov    $0x1,%r9d
+  ;; B3: #	B4 <- B2 B5 	Loop: B3-B5  Freq: 5
+
+  0x00007ffff1eb6fe5: mov    $0x1,%r8d
+  ...
+  0x00007ffff1eb6fef: nop                       ;*getstatic tmp
+                                                ; - IntLoopWithGC::loop@15 (line 8)
+  ;; B4: #	B4 B5 <- B3 B4 	Loop: B4-B4 inner  Freq: 4.93447e+06
+
+  0x00007ffff1eb6ff0: inc    %r8d               ;*iinc
+                                                ; - IntLoopWithGC::loop@23 (line 7)
+  0x00007ffff1eb6ff3: add    $0x1,%r11          ;*ladd
+                                                ; - IntLoopWithGC::loop@19 (line 8)
+  0x00007ffff1eb6ff7: mov    %r11,0x70(%r10)    ;*putstatic tmp
+                                                ; - IntLoopWithGC::loop@20 (line 8)
+  0x00007ffff1eb6ffb: cmp    $0xf4240,%r8d
+  0x00007ffff1eb7002: jl     0x00007ffff1eb6ff0  ;*if_icmpge
+                                                ; - IntLoopWithGC::loop@12 (line 7)
+  ;; B5: #	B3 B6 <- B4  Freq: 5
+
+  0x00007ffff1eb7004: inc    %r9d               ;*iinc
+                                                ; - IntLoopWithGC::loop@29 (line 6)
+  0x00007ffff1eb7007: cmp    %esi,%r9d
+  0x00007ffff1eb700a: jl     0x00007ffff1eb6fe5  ;*return
+                                                ; - IntLoopWithGC::loop@35 (line 9)
+  ;; B6: #	N1 <- B5 B1  Freq: 1
+
+  0x00007ffff1eb700c: add    $0x10,%rsp
+  0x00007ffff1eb7010: pop    %rbp
+  0x00007ffff1eb7011: test   %eax,0x613ffe9(%rip)        # 0x00007ffff7ff7000
+                                                ;   {poll_return}
+  0x00007ffff1eb7017: retq                      ;*getstatic tmp
+                                                ; - IntLoopWithGC::loop@15 (line 8)
+  0x00007ffff1eb7018: hlt
+  ...
+<span class="type">^C</span>
+Program received signal SIGINT, Interrupt.
+0x00007ffff7bc803d in pthread_join () from /lib/libpthread.so.0
+(gdb) <span class="type">info threads</span>
+  12 Thread 0x7fffecfb0710 (LWP 7255)  0x00007ffff7bcb85c in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+  11 Thread 0x7fffed44a710 (LWP 7254)  0x00007ffff7bcbbc9 in pthread_cond_timedwait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+  10 Thread 0x7fffed54b710 (LWP 7253)  0x00007ffff7bcb85c in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+  9 Thread 0x7fffed64c710 (LWP 7252)  0x00007ffff7bcb85c in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+  8 Thread 0x7fffed74d710 (LWP 7251)  0x00007ffff7bcdb50 in sem_wait () from /lib/libpthread.so.0
+  7 Thread 0x7fffed9ab710 (LWP 7250)  0x00007ffff7bcb85c in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+  6 Thread 0x7fffedaac710 (LWP 7249)  0x00007ffff7bcb85c in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+  5 Thread 0x7fffedbad710 (LWP 7248)  0x00007ffff74d9437 in sched_yield () from /lib/libc.so.6
+  4 Thread 0x7ffff1932710 (LWP 7247)  0x00007ffff7bcb85c in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+  3 Thread 0x7ffff1a33710 (LWP 7246)  0x00007ffff7bcb85c in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+  2 Thread 0x7ffff7fe4710 (LWP 7245)  0x00007ffff1eb6ffb in ?? ()
+* 1 Thread 0x7ffff7fe6700 (LWP 7244)  0x00007ffff7bc803d in pthread_join () from /lib/libpthread.so.0
+(gdb) <span class="type">thread 2</span>
+[Switching to thread 2 (Thread 0x7ffff7fe4710 (LWP 7245))]#0  0x00007ffff1eb6ffb in ?? ()
+(gdb) <span class="type">where</span>
+#0  0x00007ffff1eb6ffb in ?? ()
+#1  0x0000000000000000 in ?? ()
+(gdb) <span class="type">call mixed_ps($sp, $rbp, $pc)</span>
+"Executing mixed_ps"
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+J  IntLoopWithGC.loop(I)V
+v  ~StubRoutines::call_stub
+V  [libjvm.so+0x7305d8]  JavaCalls::call_helper(JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x51a
+V  [libjvm.so+0x9749ee]  os::os_exception_wrapper(void (*)(JavaValue*, methodHandle*, JavaCallArguments*, Thread*), JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x3a
+V  [libjvm.so+0x7300b7]  JavaCalls::call(JavaValue*, methodHandle, JavaCallArguments*, Thread*)+0x7d
+V  [libjvm.so+0x7431dd]  jni_invoke_static(JNIEnv_*, JavaValue*, _jobject*, JNICallType, _jmethodID*, JNI_ArgumentPusher*, Thread*)+0x186
+V  [libjvm.so+0x758ea1]  jni_CallStaticVoidMethod+0x37b
+C  [libjli.so+0x39c3]  JavaMain+0x8a3
+(gdb) <span class="type"> continue</span>
+Continuing.
+</pre>
+
+<p>Everything looks normal, but if we continue, we get a segmentation fault. Should we be scared about that?</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+Program received signal SIGSEGV, Segmentation fault.
+0x00007ffff1eb7011 in ?? ()
+(gdb) <span class="type"> call mixed_ps($sp, $rbp, $pc)</span>
+
+"Executing mixed_ps"
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+J  IntLoopWithGC.loop(I)V
+v  ~StubRoutines::call_stub
+V  [libjvm.so+0x7305d8]  JavaCalls::call_helper(JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x51a
+V  [libjvm.so+0x9749ee]  os::os_exception_wrapper(void (*)(JavaValue*, methodHandle*, JavaCallArguments*, Thread*), JavaValue*, methodHandle*, JavaCallArguments*, Thread*)+0x3a
+V  [libjvm.so+0x7300b7]  JavaCalls::call(JavaValue*, methodHandle, JavaCallArguments*, Thread*)+0x7d
+V  [libjvm.so+0x7431dd]  jni_invoke_static(JNIEnv_*, JavaValue*, _jobject*, JNICallType, _jmethodID*, JNI_ArgumentPusher*, Thread*)+0x186
+V  [libjvm.so+0x758ea1]  jni_CallStaticVoidMethod+0x37b
+C  [libjli.so+0x39c3]  JavaMain+0x8a3
+
+(gdb) <span class="type"> x /1i $pc</span>
+=> 0x7ffff1eb7011:	test   %eax,0x613ffe9(%rip)        # 0x7ffff7ff7000
+(gdb) <span class="type"> continue</span>
+Continuing.
+[GC 317K->320K(60800K), 0.0438280 secs]
+[Full GC 320K->217K(60800K), 0.0690220 secs]
+8060ms
+
+Program exited normally.
+</pre>
+
+<p>It doesn't seems to be critical! If we continue, the program terminates normally.</p>
+
+<p>If we try the same with LongLoopWithGC, we will see, that we get even more segmentation faults (actually every time before a GC happens).</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">run -verbose:gc -XX:+PrintOptoAssembly -XX:+PrintCompilation $MY_OPTS LongLoopWithGC 10000</span>
+...
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 0x7ffff7fe4710 (LWP 7302)]
+0x00007ffff1eb6f4c in ?? ()
+(gdb) <span class="type">continue</span>
+Continuing.
+[GC 317K->288K(60800K), 0.0248930 secs]
+[Full GC 288K->217K(60800K), 0.0708540 secs]
+
+Program received signal SIGSEGV, Segmentation fault.
+0x00007ffff1eb6f4c in ?? ()
+(gdb) <span class="type">continue</span>
+Continuing.
+[GC 852K->281K(60800K), 0.0027870 secs]
+[Full GC 281K->217K(60800K), 0.0575250 secs]
+...
+</pre>
+
+<p>Notice that this time we used -XX:+PrintOptoAssembly instead of -XX:+PrintAssembly. It provides some interesting information:</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+044   B5: #	B4 B6 <- B7 B4 	Loop: B5-B4 inner  Freq: 4.93447e+06
+044   	addq    R8, #1	# long
+048   	movq    [R11 + #112 (8-bit)], R8	# long ! Field LongLoopWithGC.tmp
+04c   	testl  rax, [rip + #offset_to_poll_page]	# Safepoint: poll for GC        # LongLoopWithGC::loop @ bci:31  L[0]=RSI L[1]=R9 L[2]=_ L[3]=RCX L[4]=_
+        # OopMap{r11=Oop off=76}
+052   	cmpq    RCX, #1000000
+059   	jl,s   B4  P=0.999999 C=1610592.000000
+059
+05b   B6: #	B3 B7 <- B5  Freq: 5
+05b   	addq    R9, #1	# long
+05f   	testl  rax, [rip + #offset_to_poll_page]	# Safepoint: poll for GC        # LongLoopWithGC::loop @ bci:38  L[0]=RSI L[1]=R9 L[2]=_ L[3]=_ L[4]=_
+        # OopMap{r11=Oop off=95}
+065   	cmpq    R9, R10
+068   	jge,s   B3  P=0.100000 C=-1.000000
+</pre>
+
+<p>So the segmentation faults are in fact Safepoints!</p>
+
+<pre style="margin-top: 0; line-height:150%; color: black; border-width: thin;">
+(gdb) <span class="type">p 'os::_polling_page'</span>
+$1 = (address) 0x7ffff7ff8000 ""
+</pre>
+
+</div>
+
+
+<div class="slide">
+<h1>Questions?</h1>
+
+<div width="100%" height="100%" align="center">
+  <img src="images/Flammarion.jpg"
+       width="60%"
+       alt="Rechenmaschiene von Philipp Matthäus Hahn (1739-1790) Quelle: Württembergisches Landesmuseum Stuttgart"/>
+</div>
+
+</div>
+<!--
+<div class="slide var2">
+<h1>Acknowledgment</h1>
+
+<br/>
+
+<br/>
+
+<ul>
+  <li>The picture on the title page shows a mechanical calculator developed by
+    <a href="http://en.wikipedia.org/wiki/Philipp_Matth%C3%A4us_Hahn">Philipp Matth&auml;us Hahn</a>
+    (1739-1790). It was taken from the
+    <a href="http://www.landesmuseum-stuttgart.de/de/museum/sammlungen/kunstgeschichte/uhren.htm">
+      W&uuml;rttembergisches Landesmuseum Stuttgart</a></li>
+</ul>
+
+<br/>
+
+<ul>
+  <li>The Flammarion engraving on the last slide is a wood engraving by an unknown artist that
+    first appeared in Camille Flammarion's "L'atmosph&egrave;re: m&eacute;t&eacute;orologie populaire" (1888). The picture
+    was taken from <a href="http://en.wikipedia.org/wiki/File:Flammarion.jpg">Wikimedia</a></li>
+</ul>
+
+</div>
+-->
+<script src="js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+</body>
+</html>
+
+<!--  LocalWords:  OpenJDK pre lightgray img toc monospace px td th ffffe arial
+ -->
+<!--  LocalWords:  helvetica Volker Simonis GPLv Classpath RedHat Azul Multi VM
+ -->
+<!--  LocalWords:  Framebuffer OCA FSF OSI TCK OCTLA Messinger Gartner SUNY JDK
+ -->
+<!--  LocalWords:  Oswego Milinkovich Committers Webrev JIRA corba hotspot jaxp
+ -->
+<!--  LocalWords:  jaxws jdk langtools hg cd ksh webrev tmp html JTreg JCK AWT
+ -->
+<!--  LocalWords:  ShellScript plugins HotSpot hsx GC JVM downported RFEs
+ -->

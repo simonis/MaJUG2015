@@ -1,0 +1,139 @@
+cscope 15 /media/sf_C_DRIVE/Users/D046063/public_html/hotspot/JavaOne2013_HS/examples               0000000779
+	@mixed_ps.cpp
+
+1 
+	g¤c
+/
+	gsh¬e
+/
+	gvm
+/
+	gutž™›s
+/
+	gdebug
+.
+ýp
+
+
+3 "C" 
+	$mixed_ps
+(
+šŒ_t
+ *
+¥
+, iÁ±r_ˆ*
+å
+, *
+pc
+) {
+
+5 
+buf
+[
+O_BUFLEN
+];
+
+7 
+äame
+ 
+ä
+ = (
+pc
+ =ð
+NULL
+è? 
+os
+::
+	`cu¼’t_äame
+(è: 
+	`äame
+(
+¥
+, 
+å
+,…c);
+
+10 ià(
+ä
+.
+	`pc
+()) {
+
+11 
+‰y
+->
+	`´št_ü
+("Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)");
+
+13 
+couÁ
+ = 0;
+
+15 
+couÁ
+++ < 
+SckPrštLim™
+) {
+
+16 
+ä
+.
+	`´št_Ú_”rÜ
+(
+‰y
+, 
+buf
+,  (buf));
+
+17 
+‰y
+->
+	`ü
+();
+
+18 ià(
+os
+::
+	`is_fœ¡_C_äame
+(&
+ä
+)) ;
+
+19 
+ä
+ = 
+os
+::
+	`g‘_£nd”_fÜ_C_äame
+(&fr);
+
+22 ià(
+couÁ
+ > 
+SckPrštLim™
+) {
+
+23 
+‰y
+->
+	`´št_ü
+("...<more frames>...");
+
+26 
+‰y
+->
+	`ü
+();
+
+28 
+	}
+}
+
+	@
+1
+.
+1
+/usr/include
+1
+13
+mixed_ps.cpp
